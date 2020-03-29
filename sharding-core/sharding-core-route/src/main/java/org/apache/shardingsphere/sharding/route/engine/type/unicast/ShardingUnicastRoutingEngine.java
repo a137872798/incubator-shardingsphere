@@ -77,9 +77,9 @@ public final class ShardingUnicastRoutingEngine implements ShardingRouteEngine {
             boolean first = true;
             for (String each : logicTables) {
                 TableRule tableRule = shardingRule.getTableRule(each);
-                // 比如 11 12 21 22   另一个是    22 23 32 33  那么数据源只可能是2
-                // 这里相当于 始终选择第一个物理表  那么本次结果对应的2个物理表 分别是  21 22
+                // 默认选择第一个物理表 比如都是 xxx_0表
                 DataNode dataNode = tableRule.getActualDataNodes().get(0);
+                // 这个相当于是一个模板 在之后的 rewrite 时 将 逻辑表名更换成物理表名  tableUnits 代表有哪些表需要被替换(以及替换成什么)
                 tableUnits.add(new TableUnit(each, dataNode.getTableName()));
                 Set<String> currentDataSourceNames = new HashSet<>(tableRule.getActualDatasourceNames().size());
                 // 将本逻辑表对应的所有数据源都添加进去
@@ -99,6 +99,7 @@ public final class ShardingUnicastRoutingEngine implements ShardingRouteEngine {
             }
             // 从所有满足条件的数据源中再随机选择一个
             RouteUnit routeUnit = new RouteUnit(shardingRule.getShardingDataSourceNames().getRandomDataSourceName(availableDatasourceNames));
+            // 这样都会替换成第一个物理表
             routeUnit.getTableUnits().addAll(tableUnits);
             result.getRouteUnits().add(routeUnit);
         }

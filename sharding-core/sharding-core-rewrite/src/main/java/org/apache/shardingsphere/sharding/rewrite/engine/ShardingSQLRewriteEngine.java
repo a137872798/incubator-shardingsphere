@@ -49,7 +49,7 @@ public final class ShardingSQLRewriteEngine implements SQLRewriteEngine {
     private final ShardingConditions shardingConditions;
 
     /**
-     * 对应某一个路由结果  在分表的情况下 一个逻辑表可能会分流到多个物理表 这里就是对应到某一个物理表
+     * 对应某一个路由结果  在分表的情况下 一个逻辑表可能会分流到多个物理表
      */
     private final RouteUnit routeUnit;
 

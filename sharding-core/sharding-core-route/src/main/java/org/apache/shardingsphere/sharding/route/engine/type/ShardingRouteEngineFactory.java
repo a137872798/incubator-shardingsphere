@@ -96,7 +96,7 @@ public final class ShardingRouteEngineFactory {
         if (sqlStatementContext.getSqlStatement() instanceof DMLStatement && tableNames.isEmpty() && shardingRule.hasDefaultDataSourceName()) {
             return new ShardingDefaultDatabaseRoutingEngine(tableNames);
         }
-        // 代表没有分表键相关的条件 那么就看作是单表处理
+        // 不满足分表条件 那么就看作是单表处理  比如 insert 语句 会默认选择最先设置的物理表 比如 xxx_0 因为不可能对所有物理表都进行插入
         if (sqlStatementContext.getSqlStatement() instanceof DMLStatement && shardingConditions.isAlwaysFalse() || tableNames.isEmpty() || !shardingRule.tableRuleExists(tableNames)) {
             return new ShardingUnicastRoutingEngine(tableNames);
         }

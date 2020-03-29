@@ -81,10 +81,11 @@ public final class ShardingStandardRoutingEngine implements ShardingRouteEngine 
      */
     @Override
     public RouteResult route(final ShardingRule shardingRule) {
-        // 代表针对多个表进行修改 抛出异常
+        // 能够创建该对象的前提就是 单表 或者 binding 表 那么在绑定规则下不允许执行insert 语句
         if (isDMLForModify(sqlStatementContext) && 1 != ((TableAvailable) sqlStatementContext).getAllTables().size()) {
             throw new ShardingSphereException("Cannot support Multiple-Table for '%s'.", sqlStatementContext.getSqlStatement());
         }
+        // getDataNodes 代表获取一组备选的物理节点 如果本次sql没有shardingColumn 会返回所有节点 (因为数据本身就是所有物理表的集合 所以要查询所有物理表)
         return generateRouteResult(getDataNodes(shardingRule, shardingRule.getTableRule(logicTableName)));
     }
     

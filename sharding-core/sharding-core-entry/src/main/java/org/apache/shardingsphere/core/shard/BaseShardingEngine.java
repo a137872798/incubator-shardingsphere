@@ -192,7 +192,7 @@ public abstract class BaseShardingEngine {
         Collection<ExecutionUnit> result = new LinkedHashSet<>();
         SQLRewriteContext sqlRewriteContext = new SQLRewriteEntry(
                 metaData, properties).createSQLRewriteContext(sql, parameters, shardingRouteContext.getSqlStatementContext(), createSQLRewriteContextDecorator(shardingRouteContext));
-        // 获取本次定位到的所有物理表路径(以数据源做分界线) 也就是几个路由结果 就会生成几个实际的sql
+        // 一个 routeUnit 代表一个路由结果 内部包含了 本次sql对应的物理数据源 以及本次sql 对应的物理表 (哪些逻辑表需要被改写)
         for (RouteUnit each : shardingRouteContext.getRouteResult().getRouteUnits()) {
             // 创建重写引擎
             ShardingSQLRewriteEngine sqlRewriteEngine = new ShardingSQLRewriteEngine(shardingRule, shardingRouteContext.getShardingConditions(), each);
