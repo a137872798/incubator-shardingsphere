@@ -25,18 +25,30 @@ import java.util.Properties;
 
 /**
  * Type based SPI configuration.
+ * 基于SPI的配置类基类
  */
 @Getter
 public abstract class TypeBasedSPIConfiguration {
-    
+
+    /**
+     * 对应的类型
+     */
     private final String type;
-    
+
+    /**
+     * 填充config的属性
+     */
     private final Properties properties;
     
     public TypeBasedSPIConfiguration(final String type) {
         this(type, null);
     }
-    
+
+    /**
+     * type 不能为空
+     * @param type
+     * @param properties
+     */
     public TypeBasedSPIConfiguration(final String type, final Properties properties) {
         Preconditions.checkArgument(!Strings.isNullOrEmpty(type), "Type is required.");
         this.type = type;

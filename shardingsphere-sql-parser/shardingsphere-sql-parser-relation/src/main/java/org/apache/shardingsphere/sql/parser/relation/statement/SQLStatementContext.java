@@ -24,6 +24,7 @@ import org.apache.shardingsphere.sql.parser.sql.statement.SQLStatement;
  * SQL statement context.
  * 
  * @param <T> type of SQL statement
+ *           会话上下文
  */
 public interface SQLStatementContext<T extends SQLStatement> {
     
@@ -31,6 +32,7 @@ public interface SQLStatementContext<T extends SQLStatement> {
      * Get SQL statement.
      * 
      * @return SQL statement
+     * 获取本次会话对象
      */
     T getSqlStatement();
     
@@ -38,6 +40,7 @@ public interface SQLStatementContext<T extends SQLStatement> {
      * Get tables context.
      *
      * @return tables context
+     * 包含表信息的上下文
      */
     TablesContext getTablesContext();
 }

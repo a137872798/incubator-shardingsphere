@@ -31,14 +31,21 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Typed properties with a specified enum.
+ * 实际上该 prop的属性都是对应到某个注册中心 也就是该抽象对应着从某个注册中心拉取到的配置数据
  */
 public class TypedProperties<E extends Enum & TypedPropertiesKey> {
-    
+
+    /**
+     * 对应从某个注册中心拉取到的单个配置值
+     */
     private final Class<E> enumClass;
     
     @Getter
     private final Properties props;
-    
+
+    /**
+     * 可能读取枚举的值也是一个耗时操作吧  这里使用了缓存
+     */
     private final Map<Enum, Object> cachedProperties = new ConcurrentHashMap<>(64, 1);
     
     public TypedProperties(final Class<E> enumClass, final Properties props) {
@@ -46,17 +53,23 @@ public class TypedProperties<E extends Enum & TypedPropertiesKey> {
         this.props = props;
         validate();
     }
-    
+
+    /**
+     * 校验配置是否合法 就是类型校验
+     */
     private void validate() {
         Set<String> propertyNames = props.stringPropertyNames();
         Collection<String> errorMessages = new ArrayList<>(propertyNames.size());
         for (String each : propertyNames) {
             E typedEnum = findByKey(each);
+            // 未找到不需要校验
             if (null == typedEnum) {
                 continue;
             }
+            // 该属性期望的类型
             Class<?> type = typedEnum.getType();
             String value = props.getProperty(each);
+            // 这里对类型进行检验
             if (type == boolean.class && !StringUtil.isBooleanValue(value)) {
                 errorMessages.add(getErrorMessage(typedEnum, value));
             } else if (type == int.class && !StringUtil.isIntValue(value)) {
@@ -112,6 +125,7 @@ public class TypedProperties<E extends Enum & TypedPropertiesKey> {
      *
      * @param key property key
      * @return value enum, return {@code null} if not found
+     * 遍历枚举类下所有的常量
      */
     public E findByKey(final String key) {
         E[] enumConstants = this.enumClass.getEnumConstants();

@@ -41,13 +41,20 @@ public final class NewInstanceServiceLoader {
      *
      * @param service service type
      * @param <T> type of service
+     *           每当注册一个接口时 就会将所有的实现类加载到容器中
      */
     public static <T> void register(final Class<T> service) {
         for (T each : ServiceLoader.load(service)) {
             registerServiceClass(service, each);
         }
     }
-    
+
+    /**
+     * 保存映射关系
+     * @param service
+     * @param instance
+     * @param <T>
+     */
     @SuppressWarnings("unchecked")
     private static <T> void registerServiceClass(final Class<T> service, final T instance) {
         Collection<Class<?>> serviceClasses = SERVICE_MAP.get(service);
@@ -64,8 +71,9 @@ public final class NewInstanceServiceLoader {
      * @param service service class
      * @param <T> type of service
      * @return service instances
+     * 查找某个接口的所有实现类
      */
-    @SneakyThrows
+    @SneakyThrows   // 该注解会忽略 受检异常
     @SuppressWarnings("unchecked")
     public static <T> Collection<T> newServiceInstances(final Class<T> service) {
         Collection<T> result = new LinkedList<>();

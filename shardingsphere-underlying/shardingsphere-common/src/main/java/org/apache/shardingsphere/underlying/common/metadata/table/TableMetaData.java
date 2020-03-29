@@ -35,9 +35,16 @@ import java.util.concurrent.CopyOnWriteArraySet;
 @EqualsAndHashCode
 @ToString
 public final class TableMetaData {
-    
+
+    /**
+     * 每列的信息 包含列名 列类型 是否是主键
+     * 列名为key
+     */
     private final Map<String, ColumnMetaData> columns;
-    
+
+    /**
+     * 索引名称
+     */
     private final Collection<String> indexes;
     
     public TableMetaData(final Collection<ColumnMetaData> columnMetaDataList, final Collection<String> indexes) {

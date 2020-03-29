@@ -55,7 +55,16 @@ public final class MasterSlavePreparedStatement extends AbstractMasterSlavePrepa
     public MasterSlavePreparedStatement(final MasterSlaveConnection connection, final String sql, final int resultSetType, final int resultSetConcurrency) throws SQLException {
         this(connection, sql, resultSetType, resultSetConcurrency, ResultSet.HOLD_CURSORS_OVER_COMMIT);
     }
-    
+
+    /**
+     * 初始化主从会话对象
+     * @param connection
+     * @param sql
+     * @param resultSetType
+     * @param resultSetConcurrency
+     * @param resultSetHoldability
+     * @throws SQLException
+     */
     public MasterSlavePreparedStatement(
             final MasterSlaveConnection connection, final String sql, final int resultSetType, final int resultSetConcurrency, final int resultSetHoldability) throws SQLException {
         if (Strings.isNullOrEmpty(sql)) {

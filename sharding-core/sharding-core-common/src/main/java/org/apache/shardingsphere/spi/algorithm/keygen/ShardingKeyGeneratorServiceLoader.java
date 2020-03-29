@@ -23,6 +23,7 @@ import org.apache.shardingsphere.spi.keygen.ShardingKeyGenerator;
 
 /**
  * Key generator service loader.
+ * 基于SPI机制加载自动生成主键的类
  */
 public final class ShardingKeyGeneratorServiceLoader extends TypeBasedSPIServiceLoader<ShardingKeyGenerator> {
     

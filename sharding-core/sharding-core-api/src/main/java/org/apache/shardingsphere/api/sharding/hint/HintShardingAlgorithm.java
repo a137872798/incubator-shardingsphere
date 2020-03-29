@@ -25,6 +25,7 @@ import java.util.Collection;
  * Sharding algorithm for hint without sharding keys.
  * 
  * @param <T> class type of sharding value
+ *           这个sharding key 应该是对会影响到改写结果的关键字吧  而hint 是由用户来决定生成规则 所以 without sharding keys
  */
 public interface HintShardingAlgorithm<T extends Comparable<?>> extends ShardingAlgorithm {
     

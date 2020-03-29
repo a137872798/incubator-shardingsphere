@@ -30,6 +30,7 @@ import org.apache.shardingsphere.sql.parser.exception.SQLParsingException;
 
 /**
  * SQL parser executor.
+ * sql解析器
  */
 @RequiredArgsConstructor
 public final class SQLParserExecutor {
@@ -50,12 +51,18 @@ public final class SQLParserExecutor {
         }
         return result;
     }
-    
+
+    /**
+     * shardingsphere 生成的词法解析对象是通过 antlr快捷生成的 不过里面的实现还是有必要学习
+     * @return
+     */
     private ParseTree towPhaseParse() {
         SQLParser sqlParser = SQLParserFactory.newInstance(databaseTypeName, sql);
         try {
+            // 在解析出现异常时抛出异常 同时在ParserRuleContext中设置异常信息
             ((Parser) sqlParser).setErrorHandler(new BailErrorStrategy());
             ((Parser) sqlParser).getInterpreter().setPredictionMode(PredictionMode.SLL);
+            // 解析后获取第一个token
             return sqlParser.execute().getChild(0);
         } catch (final ParseCancellationException ex) {
             ((Parser) sqlParser).reset();

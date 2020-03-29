@@ -21,6 +21,7 @@ import org.apache.shardingsphere.sql.parser.sql.statement.AbstractSQLStatement;
 
 /**
  * DML statement.
+ * dml 会话 也就是增删改
  */
 public abstract class DMLStatement extends AbstractSQLStatement {
 }

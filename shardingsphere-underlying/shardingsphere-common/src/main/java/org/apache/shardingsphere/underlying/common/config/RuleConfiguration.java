@@ -19,6 +19,7 @@ package org.apache.shardingsphere.underlying.common.config;
 
 /**
  * Rule configuration.
+ * 规则配置接口
  */
 public interface RuleConfiguration {
 }

@@ -28,11 +28,15 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Round-robin slave database load-balance algorithm.
+ * 基于轮询的策略
  */
 @Getter
 @Setter
 public final class RoundRobinMasterSlaveLoadBalanceAlgorithm implements MasterSlaveLoadBalanceAlgorithm {
-    
+
+    /**
+     * 这里维护了每个 name 对应的当前SlaveDataSourceList 应该选择的从数据源下标
+     */
     private static final ConcurrentHashMap<String, AtomicInteger> COUNTS = new ConcurrentHashMap<>();
     
     private Properties properties = new Properties();
@@ -47,6 +51,7 @@ public final class RoundRobinMasterSlaveLoadBalanceAlgorithm implements MasterSl
         AtomicInteger count = COUNTS.containsKey(name) ? COUNTS.get(name) : new AtomicInteger(0);
         COUNTS.putIfAbsent(name, count);
         count.compareAndSet(slaveDataSourceNames.size(), 0);
+        // 移动下标
         return slaveDataSourceNames.get(Math.abs(count.getAndIncrement()) % slaveDataSourceNames.size());
     }
 }

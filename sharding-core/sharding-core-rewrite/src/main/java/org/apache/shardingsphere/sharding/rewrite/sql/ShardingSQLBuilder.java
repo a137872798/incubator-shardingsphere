@@ -34,6 +34,7 @@ import java.util.Map;
 
 /**
  * SQL builder for sharding.
+ * 用于构建分表后的语句
  */
 public final class ShardingSQLBuilder extends AbstractSQLBuilder {
     
@@ -46,7 +47,12 @@ public final class ShardingSQLBuilder extends AbstractSQLBuilder {
         this.shardingRule = shardingRule;
         this.routeUnit = routeUnit;
     }
-    
+
+    /**
+     * 开始加工token
+     * @param sqlToken
+     * @return
+     */
     @Override
     protected String getSQLTokenText(final SQLToken sqlToken) {
         if (sqlToken instanceof RouteUnitAware) {

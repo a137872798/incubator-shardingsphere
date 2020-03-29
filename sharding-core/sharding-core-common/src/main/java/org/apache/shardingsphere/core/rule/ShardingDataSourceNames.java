@@ -31,11 +31,18 @@ import java.util.concurrent.ThreadLocalRandom;
  * Sharding data source names.
  * 
  * <p>Will convert actual data source names to master-slave data source name.</p>
+ * 一组dataSourceName
  */
 public final class ShardingDataSourceNames {
-    
+
+    /**
+     * 类似一个配置总集  内部包含了分表的所有配置
+     */
     private final ShardingRuleConfiguration shardingRuleConfig;
-    
+
+    /**
+     * 一组数据源的名称
+     */
     @Getter
     private final Collection<String> dataSourceNames;
     
@@ -44,9 +51,14 @@ public final class ShardingDataSourceNames {
         this.shardingRuleConfig = shardingRuleConfig;
         dataSourceNames = getAllDataSourceNames(rawDataSourceNames);
     }
-    
+
+    /**
+     * @param dataSourceNames
+     * @return
+     */
     private Collection<String> getAllDataSourceNames(final Collection<String> dataSourceNames) {
         Collection<String> result = new LinkedHashSet<>(dataSourceNames);
+        // TODO 如果存在主从配置信息才要做处理 现在看sharding模式 先忽略
         for (MasterSlaveRuleConfiguration each : shardingRuleConfig.getMasterSlaveRuleConfigs()) {
             result.remove(each.getMasterDataSourceName());
             result.removeAll(each.getSlaveDataSourceNames());
@@ -59,6 +71,7 @@ public final class ShardingDataSourceNames {
      * Get default data source name.
      *
      * @return default data source name
+     * 如果包含多个 dataSourceName  那么返回一个默认的数据源名称
      */
     public String getDefaultDataSourceName() {
         return 1 == dataSourceNames.size() ? dataSourceNames.iterator().next() : shardingRuleConfig.getDefaultDataSourceName();
@@ -69,6 +82,7 @@ public final class ShardingDataSourceNames {
      *
      * @param dataSourceName data source name
      * @return raw master data source name
+     * 找到该数据源名称对应的  masterDataSourceName
      */
     public String getRawMasterDataSourceName(final String dataSourceName) {
         for (MasterSlaveRuleConfiguration each : shardingRuleConfig.getMasterSlaveRuleConfigs()) {
@@ -93,6 +107,7 @@ public final class ShardingDataSourceNames {
      *
      * @param dataSourceNames available data source names
      * @return random data source name
+     * 返回一个随机的dataSourceName
      */
     public String getRandomDataSourceName(final Collection<String> dataSourceNames) {
         return Lists.newArrayList(dataSourceNames).get(ThreadLocalRandom.current().nextInt(dataSourceNames.size()));

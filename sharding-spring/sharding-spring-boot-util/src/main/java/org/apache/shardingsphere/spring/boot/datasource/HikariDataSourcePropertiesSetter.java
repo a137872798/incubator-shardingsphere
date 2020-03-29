@@ -35,10 +35,12 @@ public final class HikariDataSourcePropertiesSetter implements DataSourcePropert
     @SneakyThrows(ReflectiveOperationException.class)
     public void propertiesSet(final Environment environment, final String prefix, final String dataSourceName, final DataSource dataSource) {
         Properties properties = new Properties();
+        // 应该是某些数据源自定义的属性 比如 hikari 拓展了原生 dataSource的属性
         String datasourcePropertiesKey = prefix + dataSourceName.trim() + ".data-source-properties";
         if (PropertyUtil.containPropertyPrefix(environment, datasourcePropertiesKey)) {
             Map datasourceProperties = PropertyUtil.handle(environment, datasourcePropertiesKey, Map.class);
             properties.putAll(datasourceProperties);
+            // 有印象 好像hikari 有这些特殊属性然后一旦创建dataSource 自动用里面的属性进行覆盖
             Method method = dataSource.getClass().getMethod("setDataSourceProperties", Properties.class);
             method.invoke(dataSource, properties);
         }

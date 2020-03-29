@@ -45,6 +45,7 @@ import java.util.TreeSet;
 
 /**
  * Databases and tables sharding rule.
+ * 分库分表规则
  */
 @Getter
 public class ShardingRule implements BaseRule {
@@ -68,43 +69,79 @@ public class ShardingRule implements BaseRule {
     private final Collection<MasterSlaveRule> masterSlaveRules;
     
     private final EncryptRule encryptRule;
-    
+
+
+    /**
+     * @param shardingRuleConfig  分表相关所有配置都在里面
+     * @param dataSourceNames  本次配置中所有数据源名称
+     */
     public ShardingRule(final ShardingRuleConfiguration shardingRuleConfig, final Collection<String> dataSourceNames) {
         Preconditions.checkArgument(null != shardingRuleConfig, "ShardingRuleConfig cannot be null.");
         Preconditions.checkArgument(null != dataSourceNames && !dataSourceNames.isEmpty(), "Data sources cannot be empty.");
         this.ruleConfiguration = shardingRuleConfig;
+        // 该对象就是2个参数的包装对象
         shardingDataSourceNames = new ShardingDataSourceNames(shardingRuleConfig, dataSourceNames);
+        // 根据table级别规则配置来生成规则对象  注意这里内部配置的dataNode 可能是物理表名 也可能是逻辑表名 主要看配置文件有没有设置 dataNode
         tableRules = createTableRules(shardingRuleConfig);
+        // 获取配置下所有的广播表
         broadcastTables = shardingRuleConfig.getBroadcastTables();
+        // 绑定表可以避免笛卡尔积 也就是将多张关联性很强的表绑定在一起  0表对0表 1表对1表 本来排列组合 是4种情况
         bindingTableRules = createBindingTableRules(shardingRuleConfig.getBindingTableGroups());
+
+        // 根据配置生成相关策略 (降级策略)
         defaultDatabaseShardingStrategy = createDefaultShardingStrategy(shardingRuleConfig.getDefaultDatabaseShardingStrategyConfig());
         defaultTableShardingStrategy = createDefaultShardingStrategy(shardingRuleConfig.getDefaultTableShardingStrategyConfig());
         defaultShardingKeyGenerator = createDefaultKeyGenerator(shardingRuleConfig.getDefaultKeyGeneratorConfig());
+        // TODO 没设置主从的情况就先忽略
         masterSlaveRules = createMasterSlaveRules(shardingRuleConfig.getMasterSlaveRuleConfigs());
+        // TODO 数据脱敏的忽略
         encryptRule = createEncryptRule(shardingRuleConfig.getEncryptRuleConfig());
     }
-    
+
+    /**
+     * 从规则配置中获取表的配置 并生成 TableRule (该对象内部包含了某个逻辑表下所有的dataSource)
+     * @param shardingRuleConfig
+     * @return
+     */
     private Collection<TableRule> createTableRules(final ShardingRuleConfiguration shardingRuleConfig) {
+        // 以表为维度 声明了一些逻辑表的规则
         Collection<TableRuleConfiguration> tableRuleConfigurations = shardingRuleConfig.getTableRuleConfigs();
         Collection<TableRule> result = new ArrayList<>(tableRuleConfigurations.size());
         for (TableRuleConfiguration each : tableRuleConfigurations) {
+            // 每个规则对象又和 dataSources 以及 全局规则绑定在一起   还有默认生成的列 一般都不配置
             result.add(new TableRule(each, shardingDataSourceNames, getDefaultGenerateKeyColumn(shardingRuleConfig)));
         }
         return result;
     }
-    
+
+    /**
+     * 通过配置中包含的KeyGeneratorConfig 得知本次自动生成键的列名
+     * @param shardingRuleConfig
+     * @return
+     */
     private String getDefaultGenerateKeyColumn(final ShardingRuleConfiguration shardingRuleConfig) {
         return null == shardingRuleConfig.getDefaultKeyGeneratorConfig() ? null : shardingRuleConfig.getDefaultKeyGeneratorConfig().getColumn();
     }
-    
+
+    /**
+     *
+     * @param bindingTableGroups 每个字符串是绑定的一组
+     * @return
+     */
     private Collection<BindingTableRule> createBindingTableRules(final Collection<String> bindingTableGroups) {
         Collection<BindingTableRule> result = new ArrayList<>(bindingTableGroups.size());
         for (String each : bindingTableGroups) {
+            // 将结果包装成 bindingTable
             result.add(createBindingTableRule(each));
         }
         return result;
     }
-    
+
+    /**
+     * 根据绑定表组来创建规则对象
+     * @param bindingTableGroup
+     * @return
+     */
     private BindingTableRule createBindingTableRule(final String bindingTableGroup) {
         List<TableRule> tableRules = new LinkedList<>();
         for (String each : Splitter.on(",").trimResults().splitToList(bindingTableGroup)) {
@@ -176,13 +213,16 @@ public class ShardingRule implements BaseRule {
      * @return table rule
      */
     public TableRule getTableRule(final String logicTableName) {
+        // 上一步 已经根据所有TableConfig信息生成了 TableRule 对象了 那么这里只是找到该对象
         Optional<TableRule> tableRule = findTableRule(logicTableName);
         if (tableRule.isPresent()) {
             return tableRule.get();
         }
+        // 如果该表被指定为广播表
         if (isBroadcastTable(logicTableName)) {
             return new TableRule(shardingDataSourceNames.getDataSourceNames(), logicTableName);
         }
+        // 默认情况 就当作不需要分表  这里会获取该dataSource 下所有的table信息
         if (!Strings.isNullOrEmpty(shardingDataSourceNames.getDefaultDataSourceName())) {
             return new TableRule(shardingDataSourceNames.getDefaultDataSourceName(), logicTableName);
         }
@@ -212,6 +252,7 @@ public class ShardingRule implements BaseRule {
      *
      * @param tableRule table rule
      * @return table sharding strategy
+     * 获取table 级别的分表策略
      */
     public ShardingStrategy getTableShardingStrategy(final TableRule tableRule) {
         return null == tableRule.getTableShardingStrategy() ? defaultTableShardingStrategy : tableRule.getTableShardingStrategy();
@@ -220,22 +261,29 @@ public class ShardingRule implements BaseRule {
     /**
      * Judge logic tables is all belong to binding encryptors.
      *
-     * @param logicTableNames logic table names
+     * @param logicTableNames logic table names   某组逻辑表
      * @return logic tables is all belong to binding encryptors or not
      */
     public boolean isAllBindingTables(final Collection<String> logicTableNames) {
         if (logicTableNames.isEmpty()) {
             return false;
         }
+        // 判断本组逻辑表是否使用同一个 TableRule
         Optional<BindingTableRule> bindingTableRule = findBindingTableRule(logicTableNames);
         if (!bindingTableRule.isPresent()) {
             return false;
         }
+        // 这里只针对匹配的第一个 bindingTableRule 判断 本次所有逻辑表能否在 内部所有的 tableRule 找到对应者
         Collection<String> result = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
         result.addAll(bindingTableRule.get().getAllLogicTables());
         return !result.isEmpty() && result.containsAll(logicTableNames);
     }
-    
+
+    /**
+     * 只要能通过某个逻辑表名找到对应的 bindingRule 就直接返回
+     * @param logicTableNames
+     * @return
+     */
     private Optional<BindingTableRule> findBindingTableRule(final Collection<String> logicTableNames) {
         for (String each : logicTableNames) {
             Optional<BindingTableRule> result = findBindingTableRule(each);
@@ -352,6 +400,7 @@ public class ShardingRule implements BaseRule {
      *
      * @param logicTableName logic table name
      * @return column name of generated key
+     * 确保查询的 逻辑表名 保存在rule 中
      */
     public Optional<String> findGenerateKeyColumnName(final String logicTableName) {
         for (TableRule each : tableRules) {
@@ -367,12 +416,15 @@ public class ShardingRule implements BaseRule {
      *
      * @param logicTableName logic table name
      * @return generated key
+     * 通过逻辑表名 确定某一组分表 并生成全局唯一键
      */
     public Comparable<?> generateKey(final String logicTableName) {
+        // 获取该逻辑表相关的规则
         Optional<TableRule> tableRule = findTableRule(logicTableName);
         if (!tableRule.isPresent()) {
             throw new ShardingSphereConfigurationException("Cannot find strategy for generate keys.");
         }
+        // 获取唯一键生成器
         ShardingKeyGenerator shardingKeyGenerator = null == tableRule.get().getShardingKeyGenerator() ? defaultShardingKeyGenerator : tableRule.get().getShardingKeyGenerator();
         return shardingKeyGenerator.generateKey();
     }
@@ -398,6 +450,7 @@ public class ShardingRule implements BaseRule {
      *
      * @param logicTableName logic table name
      * @return data node
+     * 这里只返回一个dataNode
      */
     public DataNode getDataNode(final String logicTableName) {
         TableRule tableRule = getTableRule(logicTableName);

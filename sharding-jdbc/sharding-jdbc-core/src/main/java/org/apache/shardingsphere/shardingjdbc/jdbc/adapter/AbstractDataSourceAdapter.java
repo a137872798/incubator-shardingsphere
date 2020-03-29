@@ -37,6 +37,7 @@ import java.util.logging.Logger;
 
 /**
  * Adapter for {@code Datasource}.
+ * 骨架类
  */
 @Getter
 public abstract class AbstractDataSourceAdapter extends AbstractUnsupportedOperationDataSource implements AutoCloseable {
@@ -47,7 +48,12 @@ public abstract class AbstractDataSourceAdapter extends AbstractUnsupportedOpera
     
     @Setter
     private PrintWriter logWriter = new PrintWriter(System.out);
-    
+
+    /**
+     * 通过一组数据源来进行初始化
+     * @param dataSourceMap
+     * @throws SQLException
+     */
     public AbstractDataSourceAdapter(final Map<String, DataSource> dataSourceMap) throws SQLException {
         this.dataSourceMap = dataSourceMap;
         databaseType = createDatabaseType();
@@ -58,11 +64,17 @@ public abstract class AbstractDataSourceAdapter extends AbstractUnsupportedOpera
         dataSourceMap.put("unique", dataSource);
         databaseType = createDatabaseType();
     }
-    
+
+    /**
+     * 读取数据源的类型
+     * @return
+     * @throws SQLException
+     */
     private DatabaseType createDatabaseType() throws SQLException {
         DatabaseType result = null;
         for (DataSource each : dataSourceMap.values()) {
             DatabaseType databaseType = createDatabaseType(each);
+            // 要求被配置的所有数据源 type 必须一致 否则抛出异常
             Preconditions.checkState(null == result || result == databaseType, String.format("Database type inconsistent with '%s' and '%s'", result, databaseType));
             result = databaseType;
         }
@@ -70,10 +82,14 @@ public abstract class AbstractDataSourceAdapter extends AbstractUnsupportedOpera
     }
     
     private DatabaseType createDatabaseType(final DataSource dataSource) throws SQLException {
+        // 如果该数据源已经被代理过了  那么直接取设置的数据源
         if (dataSource instanceof AbstractDataSourceAdapter) {
             return ((AbstractDataSourceAdapter) dataSource).databaseType;
         }
+        // 否则根据 url 信息获取数据源类型  看来是按数据库来区分  DatabaseType
+        // 调用 getConnection 时 会间接连接到远端 也就是失败会直接抛出异常
         try (Connection connection = dataSource.getConnection()) {
+            // 能进入到这里 url必然是有效的
             return DatabaseTypes.getDatabaseTypeByURL(connection.getMetaData().getURL());
         }
     }
@@ -98,14 +114,20 @@ public abstract class AbstractDataSourceAdapter extends AbstractUnsupportedOpera
      * 
      * @param dataSourceNames data source names
      * @throws Exception exception
+     * 关闭一组数据源
      */
     public void close(final Collection<String> dataSourceNames) throws Exception {
         for (String each : dataSourceNames) {
             close(dataSourceMap.get(each));
         }
+        // 关闭运行时上下文
         getRuntimeContext().close();
     }
-    
+
+    /**
+     * 反射调用关闭方法
+     * @param dataSource
+     */
     private void close(final DataSource dataSource) {
         try {
             Method method = dataSource.getClass().getDeclaredMethod("close");

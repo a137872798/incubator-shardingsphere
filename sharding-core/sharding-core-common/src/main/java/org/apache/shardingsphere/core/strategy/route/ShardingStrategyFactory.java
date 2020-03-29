@@ -32,6 +32,7 @@ import org.apache.shardingsphere.core.strategy.route.standard.StandardShardingSt
 
 /**
  * Sharding strategy factory.
+ * 策略工厂对象
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class ShardingStrategyFactory {
@@ -41,6 +42,7 @@ public final class ShardingStrategyFactory {
      * 
      * @param shardingStrategyConfig sharding strategy configuration
      * @return sharding strategy instance
+     * 根据配置对象 初始化对应策略
      */
     public static ShardingStrategy newInstance(final ShardingStrategyConfiguration shardingStrategyConfig) {
         if (shardingStrategyConfig instanceof StandardShardingStrategyConfiguration) {

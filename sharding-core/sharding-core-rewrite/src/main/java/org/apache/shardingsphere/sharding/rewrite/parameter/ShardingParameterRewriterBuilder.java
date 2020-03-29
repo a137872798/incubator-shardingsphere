@@ -34,14 +34,23 @@ import java.util.LinkedList;
 
 /**
  * Parameter rewriter builder for sharding.
+ * 参数修改器
  */
 @RequiredArgsConstructor
 public final class ShardingParameterRewriterBuilder implements ParameterRewriterBuilder {
-    
+
+    /**
+     * 该对象内部包含了一系列的rule 对象
+     */
     private final ShardingRule shardingRule;
     
     private final ShardingRouteContext shardingRouteContext;
-    
+
+    /**
+     * 获取2个重写参数的对象 并返回
+     * @param relationMetas relation metas   记录了所有表 以及它们有哪些列
+     * @return
+     */
     @Override
     public Collection<ParameterRewriter> getParameterRewriters(final RelationMetas relationMetas) {
         Collection<ParameterRewriter> result = getParameterRewriters();
@@ -50,14 +59,24 @@ public final class ShardingParameterRewriterBuilder implements ParameterRewriter
         }
         return result;
     }
-    
+
+    /**
+     * 获取用于修改参数的插件
+     * @return0
+     */
     private static Collection<ParameterRewriter> getParameterRewriters() {
         Collection<ParameterRewriter> result = new LinkedList<>();
+        // 用于插入 主键 和分页的
         result.add(new ShardingGeneratedKeyInsertValueParameterRewriter());
         result.add(new ShardingPaginationParameterRewriter());
         return result;
     }
-    
+
+    /**
+     * 填充一些必备的信息
+     * @param parameterRewriter
+     * @param relationMetas
+     */
     private void setUpParameterRewriters(final ParameterRewriter parameterRewriter, final RelationMetas relationMetas) {
         if (parameterRewriter instanceof RelationMetasAware) {
             ((RelationMetasAware) parameterRewriter).setRelationMetas(relationMetas);

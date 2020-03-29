@@ -24,6 +24,7 @@ import org.apache.shardingsphere.underlying.common.rule.BaseRule;
  * SQL rewrite context decorator.
  *
  * @param <T> type of rule
+ *           当重写结束后 使用装饰器模式做处理
  */
 public interface SQLRewriteContextDecorator<T extends BaseRule> {
     

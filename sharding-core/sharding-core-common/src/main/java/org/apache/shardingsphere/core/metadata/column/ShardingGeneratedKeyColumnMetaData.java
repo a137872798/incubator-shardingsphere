@@ -24,6 +24,7 @@ import org.apache.shardingsphere.underlying.common.metadata.column.ColumnMetaDat
 
 /**
  * Column meta data for sharding generated key.
+ * 代表该列在shardingSphere代理后 会自动生成值
  */
 @Getter
 @EqualsAndHashCode(callSuper = true)

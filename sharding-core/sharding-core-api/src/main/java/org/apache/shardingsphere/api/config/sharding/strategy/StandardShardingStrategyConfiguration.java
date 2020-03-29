@@ -25,14 +25,21 @@ import org.apache.shardingsphere.api.sharding.standard.RangeShardingAlgorithm;
 
 /**
  * Standard strategy configuration.
+ * 标准实现
  */
 @Getter
 public final class StandardShardingStrategyConfiguration implements ShardingStrategyConfiguration {
     
     private final String shardingColumn;
-    
+
+    /**
+     * 精确算法
+     */
     private final PreciseShardingAlgorithm preciseShardingAlgorithm;
-    
+
+    /**
+     * 范围拆分语法
+     */
     private final RangeShardingAlgorithm rangeShardingAlgorithm;
     
     public StandardShardingStrategyConfiguration(final String shardingColumn, final PreciseShardingAlgorithm preciseShardingAlgorithm) {

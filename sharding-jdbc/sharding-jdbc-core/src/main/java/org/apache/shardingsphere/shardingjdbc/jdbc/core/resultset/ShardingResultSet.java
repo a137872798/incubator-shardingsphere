@@ -42,13 +42,25 @@ import java.util.TreeMap;
 
 /**
  * Result that support sharding.
+ * 该对象用于适配 ResultSet
  */
 public final class ShardingResultSet extends AbstractResultSetAdapter {
-    
+
+    /**
+     * 该结果集内 合并了针对多个分表的resultSet
+     */
     private final MergedResult mergeResultSet;
     
     private final Map<String, Integer> columnLabelAndIndexMap;
-    
+
+    /**
+     * 该对象 通过一组结果集来初始化
+     * @param resultSets
+     * @param mergeResultSet
+     * @param statement
+     * @param executionContext
+     * @throws SQLException
+     */
     public ShardingResultSet(final List<ResultSet> resultSets, final MergedResult mergeResultSet, final Statement statement, final ShardingExecutionContext executionContext) throws SQLException {
         super(resultSets, statement, executionContext);
         this.mergeResultSet = mergeResultSet;

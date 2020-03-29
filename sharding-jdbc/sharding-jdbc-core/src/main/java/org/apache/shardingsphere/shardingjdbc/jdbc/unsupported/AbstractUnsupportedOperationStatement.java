@@ -25,6 +25,7 @@ import java.sql.Statement;
 
 /**
  * Unsupported {@code Statement} methods.
+ * 屏蔽了 Statement 不能继续使用的方法
  */
 public abstract class AbstractUnsupportedOperationStatement extends WrapperAdapter implements Statement {
     

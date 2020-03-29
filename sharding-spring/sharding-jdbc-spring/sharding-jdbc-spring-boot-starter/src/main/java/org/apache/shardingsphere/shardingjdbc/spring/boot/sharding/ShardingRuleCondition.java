@@ -29,7 +29,13 @@ import org.springframework.core.type.AnnotatedTypeMetadata;
  * Sharding rule condition.
  */
 public final class ShardingRuleCondition extends SpringBootCondition {
-    
+
+    /**
+     * 默认采用 shardingRule 规则
+     * @param conditionContext
+     * @param annotatedTypeMetadata
+     * @return
+     */
     @Override
     public ConditionOutcome getMatchOutcome(final ConditionContext conditionContext, final AnnotatedTypeMetadata annotatedTypeMetadata) {
         boolean isMasterSlaveRule = new MasterSlaveRuleCondition().getMatchOutcome(conditionContext, annotatedTypeMetadata).isMatch();

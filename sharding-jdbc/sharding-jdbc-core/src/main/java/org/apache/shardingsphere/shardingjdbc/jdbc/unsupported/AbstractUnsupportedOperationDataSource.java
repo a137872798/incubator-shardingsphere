@@ -25,6 +25,7 @@ import java.sql.SQLFeatureNotSupportedException;
 
 /**
  * Unsupported {@code Datasource} methods.
+ * 因为内部组合多个数据源 所以一些原来针对单个数据源的方法可能就失效了 比如登录时间
  */
 public abstract class AbstractUnsupportedOperationDataSource extends WrapperAdapter implements DataSource {
     

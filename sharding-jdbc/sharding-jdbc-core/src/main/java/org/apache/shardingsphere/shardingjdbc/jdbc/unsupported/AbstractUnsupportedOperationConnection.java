@@ -36,6 +36,7 @@ import java.util.concurrent.Executor;
 
 /**
  * Unsupported {@code Connection} methods.
+ * 这里屏蔽了一些代理后不支持的方法
  */
 public abstract class AbstractUnsupportedOperationConnection extends WrapperAdapter implements Connection {
     

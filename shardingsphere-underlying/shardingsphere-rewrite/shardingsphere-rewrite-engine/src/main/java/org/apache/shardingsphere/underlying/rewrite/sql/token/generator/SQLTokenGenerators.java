@@ -30,9 +30,13 @@ import java.util.List;
 
 /**
  * SQL token generators.
+ * token生成器
  */
 public final class SQLTokenGenerators {
-    
+
+    /**
+     * 包含一组对象 每个 SQLTokenGenerator 能从sql 中解析出某种Token
+     */
     private final Collection<SQLTokenGenerator> sqlTokenGenerators = new LinkedList<>();
     
     /**
@@ -60,18 +64,22 @@ public final class SQLTokenGenerators {
     /**
      * Generate SQL tokens.
      *
-     * @param sqlStatementContext SQL statement context
-     * @param parameters SQL parameters
-     * @param relationMetas relation metas
+     * @param sqlStatementContext SQL statement context   本次会话相关信息
+     * @param parameters SQL parameters  本次使用的所有参数 (已进行改写)
+     * @param relationMetas relation metas  所有逻辑表有哪些列信息
      * @return SQL tokens
+     * 传入会话对象并经过所有 tokenGenerator 处理后获取到一组token    token 就代表本次sql的一些关键字信息
      */
     public List<SQLToken> generateSQLTokens(final SQLStatementContext sqlStatementContext, final List<Object> parameters, final RelationMetas relationMetas) {
         List<SQLToken> result = new LinkedList<>();
         for (SQLTokenGenerator each : sqlTokenGenerators) {
+            // 设置相关参数
             setUpSQLTokenGenerator(each, parameters, relationMetas, result);
+            // 代表不满足生成token的条件
             if (!each.isGenerateSQLToken(sqlStatementContext)) {
                 continue;
             }
+            // 解析出token 后 保存到list 中
             if (each instanceof OptionalSQLTokenGenerator) {
                 SQLToken sqlToken = ((OptionalSQLTokenGenerator) each).generateSQLToken(sqlStatementContext);
                 if (!result.contains(sqlToken)) {
@@ -83,7 +91,14 @@ public final class SQLTokenGenerators {
         }
         return result;
     }
-    
+
+    /**
+     * 为 tokenGenerator 设置相关参数
+     * @param sqlTokenGenerator
+     * @param parameters
+     * @param relationMetas
+     * @param previousSQLTokens
+     */
     private void setUpSQLTokenGenerator(final SQLTokenGenerator sqlTokenGenerator, final List<Object> parameters, final RelationMetas relationMetas, final List<SQLToken> previousSQLTokens) {
         if (sqlTokenGenerator instanceof ParametersAware) {
             ((ParametersAware) sqlTokenGenerator).setParameters(parameters);

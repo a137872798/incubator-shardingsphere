@@ -28,20 +28,31 @@ import java.util.Collections;
 
 /**
  * Abstract SQL builder.
+ * 构建sql的骨架对象
  */
 @RequiredArgsConstructor
 @Getter
 public abstract class AbstractSQLBuilder implements SQLBuilder {
-    
+
+    /**
+     * 携带有关改写sql 的上下文信息
+     */
     private final SQLRewriteContext context;
-    
+
+    /**
+     * 加工sql 语句
+     * @return
+     */
     @Override
     public final String toSQL() {
+        // 如果没有任何关键字就不需要重写了
         if (context.getSqlTokens().isEmpty()) {
             return context.getSql();
         }
+        // 每个关键字都携带了 起始偏移量 用于定位在sql中的位置 这样 排序后确保改写后sql不会影响原来语义
         Collections.sort(context.getSqlTokens());
         StringBuilder result = new StringBuilder();
+        // 截取 遇到第一个token 前的字符串
         result.append(context.getSql().substring(0, context.getSqlTokens().get(0).getStartIndex()));
         for (SQLToken each : context.getSqlTokens()) {
             result.append(getSQLTokenText(each));

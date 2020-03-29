@@ -22,6 +22,7 @@ import org.apache.shardingsphere.sharding.route.engine.context.ShardingRouteCont
 
 /**
  * Routing hook.
+ * 路由钩子对象
  */
 public interface RoutingHook {
     
@@ -29,6 +30,7 @@ public interface RoutingHook {
      * Handle when routing started.
      *
      * @param sql SQL to be routing
+     *            开始路由时 处理sql 语句
      */
     void start(String sql);
     
@@ -37,6 +39,7 @@ public interface RoutingHook {
      *
      * @param shardingRouteContext sharding route context
      * @param tableMetas table metas
+     *                   处理结束后 通过传入的上下文对象做后置处理
      */
     void finishSuccess(ShardingRouteContext shardingRouteContext, TableMetas tableMetas);
     

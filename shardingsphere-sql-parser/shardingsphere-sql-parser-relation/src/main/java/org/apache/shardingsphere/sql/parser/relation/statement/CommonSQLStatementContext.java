@@ -28,11 +28,15 @@ import java.util.Collections;
  * Common SQL statement context.
  * 
  * @param <T> type of SQL statement
+ *           这里抽取了 会话上下文公共的部分
  */
 @Getter
 @ToString
 public class CommonSQLStatementContext<T extends SQLStatement> implements SQLStatementContext<T> {
-    
+
+    /**
+     * 本次会话实体   是通过visitor 观察 ast语法树后生成的
+     */
     private final T sqlStatement;
     
     private final TablesContext tablesContext;

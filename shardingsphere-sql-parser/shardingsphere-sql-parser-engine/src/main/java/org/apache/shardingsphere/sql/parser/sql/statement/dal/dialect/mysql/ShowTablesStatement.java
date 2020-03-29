@@ -25,6 +25,7 @@ import java.util.Optional;
 
 /**
  * Show tables statement.
+ * 查看表的会话
  */
 @Setter
 public final class ShowTablesStatement extends DALStatement {

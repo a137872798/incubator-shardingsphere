@@ -28,10 +28,14 @@ import java.util.Collection;
 
 /**
  * Adapter for {@code Statement}.
+ * 代理 statement
  */
 @RequiredArgsConstructor
 public abstract class AbstractStatementAdapter extends AbstractUnsupportedOperationStatement {
-    
+
+    /**
+     * Statement.class or PrepareStatement.class
+     */
     private final Class<? extends Statement> targetClass;
     
     private boolean closed;
@@ -47,6 +51,7 @@ public abstract class AbstractStatementAdapter extends AbstractUnsupportedOperat
     public final void close() throws SQLException {
         closed = true;
         try {
+            // 获取所有statement 对象并进行关闭
             forceExecuteTemplate.execute((Collection) getRoutedStatements(), Statement::close);
         } finally {
             getRoutedStatements().clear();
@@ -62,7 +67,12 @@ public abstract class AbstractStatementAdapter extends AbstractUnsupportedOperat
     public final boolean isPoolable() {
         return poolable;
     }
-    
+
+    /**
+     * 一些设置属性的方法不仅针对当前已经创建的连接 还缓存了这些方法 之后新建的连接会立即触发
+     * @param poolable
+     * @throws SQLException
+     */
     @SuppressWarnings("unchecked")
     @Override
     public final void setPoolable(final boolean poolable) throws SQLException {
@@ -99,6 +109,7 @@ public abstract class AbstractStatementAdapter extends AbstractUnsupportedOperat
     
     @Override
     public final int getUpdateCount() throws SQLException {
+        //  本次会话更新了多少条记录
         if (isAccumulate()) {
             return accumulate();
         } else {
@@ -106,13 +117,20 @@ public abstract class AbstractStatementAdapter extends AbstractUnsupportedOperat
             if (statements.isEmpty()) {
                 return -1;
             }
+            // 只获取一组会话中某个的更新数量
             return getRoutedStatements().iterator().next().getUpdateCount();
         }
     }
-    
+
+    /**
+     * 返回累计的更新数量
+     * @return
+     * @throws SQLException
+     */
     private int accumulate() throws SQLException {
         long result = 0;
         boolean hasResult = false;
+        // 遍历所有statement 并累加结果
         for (Statement each : getRoutedStatements()) {
             int updateCount = each.getUpdateCount();
             if (updateCount > -1) {
@@ -173,7 +191,8 @@ public abstract class AbstractStatementAdapter extends AbstractUnsupportedOperat
         recordMethodInvocation(targetClass, "setMaxRows", new Class[] {int.class}, new Object[] {max});
         forceExecuteTemplate.execute((Collection) getRoutedStatements(), statement -> statement.setMaxRows(max));
     }
-    
+
+    // 这里都是只取一个会话的属性作为结果
     @Override
     public final int getQueryTimeout() throws SQLException {
         return getRoutedStatements().isEmpty() ? 0 : getRoutedStatements().iterator().next().getQueryTimeout();

@@ -26,6 +26,7 @@ import java.util.List;
  * Input group.
  *
  * @param <T> type of inputs value
+ *           包装对象 内部实际对应一组数据
  */
 @RequiredArgsConstructor
 @Getter

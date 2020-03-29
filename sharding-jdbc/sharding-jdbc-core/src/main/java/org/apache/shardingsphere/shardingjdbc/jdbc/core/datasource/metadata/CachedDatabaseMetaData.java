@@ -28,6 +28,7 @@ import java.util.Map;
 
 /**
  * Cached database meta data.
+ * 数据源元数据缓存对象
  */
 public final class CachedDatabaseMetaData extends AdaptedDatabaseMetaData {
     
@@ -294,7 +295,14 @@ public final class CachedDatabaseMetaData extends AdaptedDatabaseMetaData {
     private final RowIdLifetime rowIdLifetime;
     
     private final boolean generatedKeyAlwaysReturned;
-    
+
+    /**
+     * 可以简单的理解成一个 bean对象
+     * @param databaseMetaData   从 Connection 上获取的元数据信息
+     * @param dataSourceMap   本次shardingSphere 绑定的所有数据源
+     * @param shardingRule   分表选择的策略
+     * @throws SQLException
+     */
     public CachedDatabaseMetaData(final DatabaseMetaData databaseMetaData, final Map<String, DataSource> dataSourceMap, final ShardingRule shardingRule) throws SQLException {
         super(dataSourceMap, shardingRule);
         url = databaseMetaData.getURL();

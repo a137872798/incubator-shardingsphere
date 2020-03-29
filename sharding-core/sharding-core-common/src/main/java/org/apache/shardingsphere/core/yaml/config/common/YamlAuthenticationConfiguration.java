@@ -26,10 +26,14 @@ import java.util.Map;
 
 /**
  * Authentication configuration for YAML.
+ * yml格式的配置文件
  */
 @Getter
 @Setter
 public final class YamlAuthenticationConfiguration implements YamlConfiguration {
-    
+
+    /**
+     * 内部存放了一组 proxyUser的配置
+     */
     private Map<String, YamlProxyUserConfiguration> users = new LinkedHashMap<>();
 }

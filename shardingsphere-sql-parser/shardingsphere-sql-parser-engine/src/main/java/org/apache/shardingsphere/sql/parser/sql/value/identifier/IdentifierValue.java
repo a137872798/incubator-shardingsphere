@@ -24,16 +24,25 @@ import org.apache.shardingsphere.sql.parser.util.SQLUtil;
 
 /**
  * Identifier value.
+ * 代表包含引用符的 信息 应该是  `user` 跟 user的关系
  */
 @Getter
 public final class IdentifierValue implements ValueASTNode<String> {
     
     private final String value;
-    
+
+    /**
+     * 引用符
+     */
     private final QuoteCharacter quoteCharacter;
-    
+
+    /**
+     * 从文本中解析出值
+     * @param text
+     */
     public IdentifierValue(final String text) {
         value = SQLUtil.getExactlyValue(text);
+        // 从文本中找到引用符
         quoteCharacter = QuoteCharacter.getQuoteCharacter(text);
     }
 }

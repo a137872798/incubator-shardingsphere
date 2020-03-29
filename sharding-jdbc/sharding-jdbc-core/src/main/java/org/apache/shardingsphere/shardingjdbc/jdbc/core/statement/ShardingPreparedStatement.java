@@ -60,20 +60,32 @@ import java.util.Optional;
 
 /**
  * PreparedStatement that support sharding.
+ * 该会话对象内置了 整合所有dataSource 的能力
  */
 public final class ShardingPreparedStatement extends AbstractShardingPreparedStatementAdapter {
-    
+
+    /**
+     * 该连接对象 内部包含了一个  Map<String, DataSource>  也就代表了所有物理dataSource
+     */
     @Getter
     private final ShardingConnection connection;
-    
+
+    /**
+     * 本次执行的sql
+     */
     private final String sql;
-    
+
+    /**
+     * 执行sql 引擎
+     */
     private final BaseShardingEngine shardingEngine;
-    
+
     private final PreparedStatementExecutor preparedStatementExecutor;
-    
     private final BatchPreparedStatementExecutor batchPreparedStatementExecutor;
-    
+
+    /**
+     * 这里存储了 生成的唯一键
+     */
     private final Collection<Comparable<?>> generatedValues = new LinkedList<>();
     
     private ShardingExecutionContext shardingExecutionContext;

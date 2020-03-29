@@ -46,6 +46,7 @@ import java.util.TreeMap;
 
 /**
  * DQL result merger for Sharding.
+ * DQL 对应 select
  */
 @RequiredArgsConstructor
 public final class ShardingDQLResultMerger implements ResultMerger {
@@ -54,16 +55,24 @@ public final class ShardingDQLResultMerger implements ResultMerger {
     
     @Override
     public MergedResult merge(final List<QueryResult> queryResults, final SQLStatementContext sqlStatementContext, final RelationMetas relationMetas) throws SQLException {
+        // 如果只是从单个表查询结果
         if (1 == queryResults.size()) {
             return new IteratorStreamMergedResult(queryResults);
         }
+        // 因为它们的表结构都是一致的 这里只要获取一个结果就可以
         Map<String, Integer> columnLabelIndexMap = getColumnLabelIndexMap(queryResults.get(0));
         SelectStatementContext selectStatementContext = (SelectStatementContext) sqlStatementContext;
         selectStatementContext.setIndexes(columnLabelIndexMap);
         MergedResult mergedResult = build(queryResults, selectStatementContext, columnLabelIndexMap);
         return decorate(queryResults, selectStatementContext, mergedResult);
     }
-    
+
+    /**
+     * 将结果每列的信息 以及下标保存到map中
+     * @param queryResult
+     * @return
+     * @throws SQLException
+     */
     private Map<String, Integer> getColumnLabelIndexMap(final QueryResult queryResult) throws SQLException {
         Map<String, Integer> result = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
         for (int i = queryResult.getColumnCount(); i > 0; i--) {
@@ -71,7 +80,15 @@ public final class ShardingDQLResultMerger implements ResultMerger {
         }
         return result;
     }
-    
+
+    /**
+     * 构建整合对象
+     * @param queryResults
+     * @param selectStatementContext
+     * @param columnLabelIndexMap
+     * @return
+     * @throws SQLException
+     */
     private MergedResult build(final List<QueryResult> queryResults, final SelectStatementContext selectStatementContext, final Map<String, Integer> columnLabelIndexMap) throws SQLException {
         if (isNeedProcessGroupBy(selectStatementContext)) {
             return getGroupByMergedResult(queryResults, selectStatementContext, columnLabelIndexMap);

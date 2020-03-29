@@ -32,12 +32,18 @@ import java.util.LinkedList;
 
 /**
  * Table token generator.
+ * 生成表名的tokenG
  */
 @Setter
 public final class TableTokenGenerator implements CollectionSQLTokenGenerator, ShardingRuleAware {
     
-    private ShardingRule shardingRule; 
-    
+    private ShardingRule shardingRule;
+
+    /**
+     * 任何sql总是满足创建token 条件
+     * @param sqlStatementContext SQL statement context
+     * @return
+     */
     @Override
     public boolean isGenerateSQLToken(final SQLStatementContext sqlStatementContext) {
         return true;
@@ -47,7 +53,12 @@ public final class TableTokenGenerator implements CollectionSQLTokenGenerator, S
     public Collection<TableToken> generateSQLTokens(final SQLStatementContext sqlStatementContext) {
         return sqlStatementContext instanceof TableAvailable ? generateSQLTokens((TableAvailable) sqlStatementContext) : Collections.emptyList();
     }
-    
+
+    /**
+     * 将表相关的token 抽取出来 包含它在整个sql语句的起始偏移量/结尾偏移量
+     * @param sqlStatementContext
+     * @return
+     */
     private Collection<TableToken> generateSQLTokens(final TableAvailable sqlStatementContext) {
         Collection<TableToken> result = new LinkedList<>();
         for (SimpleTableSegment each : sqlStatementContext.getAllTables()) {

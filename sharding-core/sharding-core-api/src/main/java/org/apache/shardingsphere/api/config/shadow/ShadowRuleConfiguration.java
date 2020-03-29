@@ -28,17 +28,30 @@ import java.util.Map;
 
 /**
  * Shadow rule configuration.
+ * 包含一些相关配置
  */
 @Getter
 @Setter
 public class ShadowRuleConfiguration implements RuleConfiguration {
-    
+
+    /**
+     * 针对的列
+     */
     private String column;
-    
+
+    /**
+     * sharding 规则配置
+     */
     private ShardingRuleConfiguration shardingRuleConfig;
-    
+
+    /**
+     * 主从机配置
+     */
     private MasterSlaveRuleConfiguration masterSlaveRuleConfig;
-    
+
+    /**
+     *
+     */
     private EncryptRuleConfiguration encryptRuleConfig;
     
     private Map<String, String> shadowMappings;

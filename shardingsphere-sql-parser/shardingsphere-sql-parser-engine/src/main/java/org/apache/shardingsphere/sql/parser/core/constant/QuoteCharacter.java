@@ -23,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 
 /**
  * Quote character.
+ * 一些引用符
  */
 @RequiredArgsConstructor
 @Getter

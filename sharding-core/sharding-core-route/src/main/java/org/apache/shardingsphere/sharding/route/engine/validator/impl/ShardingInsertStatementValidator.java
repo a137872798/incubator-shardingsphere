@@ -29,6 +29,7 @@ import java.util.Optional;
 
 /**
  * Sharding insert statement validator.
+ * shardingSphere 不支持 insert into  on duplicate key update ... 语法
  */
 public final class ShardingInsertStatementValidator implements ShardingStatementValidator<InsertStatement> {
     

@@ -29,6 +29,7 @@ public interface SQLTokenGenerator {
      *
      * @param sqlStatementContext SQL statement context
      * @return is generate SQL token or not
+     * 能否从当前提供的sql 中解析出token
      */
     boolean isGenerateSQLToken(SQLStatementContext sqlStatementContext);
 }

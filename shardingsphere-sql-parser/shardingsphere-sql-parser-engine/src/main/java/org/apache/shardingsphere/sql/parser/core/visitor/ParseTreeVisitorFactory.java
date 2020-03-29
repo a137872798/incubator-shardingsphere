@@ -49,7 +49,13 @@ public final class ParseTreeVisitorFactory {
         }
         throw new UnsupportedOperationException(String.format("Cannot support database type '%s'", databaseTypeName));
     }
-    
+
+    /**
+     * 根据本次执行的会话类型 生成不同的观察器对象 该对象通过调用 ParseTree.visit 能够读取数据流
+     * @param configuration
+     * @param type
+     * @return
+     */
     @SneakyThrows
     private static ParseTreeVisitor createParseTreeVisitor(final SQLParserConfiguration configuration, final SQLStatementType type) {
         ParseTreeVisitorFacade visitorFacade = configuration.getVisitorFacadeClass().getConstructor().newInstance();

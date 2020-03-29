@@ -21,6 +21,7 @@ import org.apache.shardingsphere.underlying.common.config.RuleConfiguration;
 
 /**
  * Base rule.
+ * 获取该规则相关的配置
  */
 public interface BaseRule {
     

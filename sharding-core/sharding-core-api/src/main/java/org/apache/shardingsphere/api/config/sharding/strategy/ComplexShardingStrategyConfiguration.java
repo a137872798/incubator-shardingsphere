@@ -24,12 +24,16 @@ import org.apache.shardingsphere.api.sharding.complex.ComplexKeysShardingAlgorit
 
 /**
  * Complex sharding strategy configuration.
+ * 复合键配置
  */
 @Getter
 public final class ComplexShardingStrategyConfiguration implements ShardingStrategyConfiguration {
     
     private final String shardingColumns;
-    
+
+    /**
+     * 由外部设置算法
+     */
     private final ComplexKeysShardingAlgorithm shardingAlgorithm;
     
     public ComplexShardingStrategyConfiguration(final String shardingColumns, final ComplexKeysShardingAlgorithm shardingAlgorithm) {

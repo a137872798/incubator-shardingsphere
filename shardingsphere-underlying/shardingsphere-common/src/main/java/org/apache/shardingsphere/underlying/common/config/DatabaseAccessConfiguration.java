@@ -22,6 +22,7 @@ import lombok.RequiredArgsConstructor;
 
 /**
  * Database access configuration.
+ * 有关访问数据源的配置信息 可以直接通过 DataSource.getMetaData() 获取
  */
 @RequiredArgsConstructor
 @Getter

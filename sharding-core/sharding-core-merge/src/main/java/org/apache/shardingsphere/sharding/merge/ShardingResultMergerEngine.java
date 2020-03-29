@@ -31,17 +31,21 @@ import org.apache.shardingsphere.underlying.merge.engine.merger.ResultMergerEngi
 
 /**
  * Result merger engine for sharding.
+ * 用于整合ResultSet的引擎对象
  */
 public final class ShardingResultMergerEngine implements ResultMergerEngine<ShardingRule> {
     
     @Override
     public ResultMerger newInstance(final DatabaseType databaseType, final ShardingRule shardingRule, final ShardingSphereProperties properties, final SQLStatementContext sqlStatementContext) {
+
+        // 结合select 语句结果
         if (sqlStatementContext instanceof SelectStatementContext) {
             return new ShardingDQLResultMerger(databaseType);
         } 
         if (sqlStatementContext.getSqlStatement() instanceof DALStatement) {
             return new ShardingDALResultMerger(shardingRule);
         }
+        // 返回一个整合对象  应该是 DELETE/UPDATE/INSERT 不用结合 结果 所以直接返回第一个结果
         return new TransparentResultMerger();
     }
 }

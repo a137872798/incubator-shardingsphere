@@ -31,13 +31,22 @@ import java.util.Collections;
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class HintManager implements AutoCloseable {
-    
+
+    /**
+     * 基于线程来维护 HintManager对象  看来是在调用过程中 临时插入一下 执行完后 又释放该对象
+     */
     private static final ThreadLocal<HintManager> HINT_MANAGER_HOLDER = new ThreadLocal<>();
-    
+
+    /**
+     * HashMultimap 内部包含一个 HashMap 应该就是一个增强类
+     */
     private final Multimap<String, Comparable<?>> databaseShardingValues = HashMultimap.create();
     
     private final Multimap<String, Comparable<?>> tableShardingValues = HashMultimap.create();
-    
+
+    /**
+     * 是否只进行读写分离 而不改写sql
+     */
     private boolean databaseShardingOnly;
     
     private boolean masterRouteOnly;
@@ -46,6 +55,7 @@ public final class HintManager implements AutoCloseable {
      * Get a new instance for {@code HintManager}.
      *
      * @return  {@code HintManager} instance
+     * 为当前线程绑定一个空的  HintManager
      */
     public static HintManager getInstance() {
         Preconditions.checkState(null == HINT_MANAGER_HOLDER.get(), "Hint has previous value, please clear first.");
@@ -64,7 +74,9 @@ public final class HintManager implements AutoCloseable {
     public void setDatabaseShardingValue(final Comparable<?> value) {
         databaseShardingValues.clear();
         tableShardingValues.clear();
+        // 该容器本身的实现 一个key 对应的value 是 collection 类型 也就是一个key 可以对应多个value
         databaseShardingValues.put("", value);
+        // 代表只存放了一个数据
         databaseShardingOnly = true;
     }
     
@@ -80,6 +92,7 @@ public final class HintManager implements AutoCloseable {
         if (databaseShardingOnly) {
             databaseShardingValues.removeAll("");
         }
+        // 添加多个数据  可以用轻量级一点的类吧
         databaseShardingValues.put(logicTable, value);
         databaseShardingOnly = false;
     }
@@ -114,6 +127,7 @@ public final class HintManager implements AutoCloseable {
      *
      * @param logicTable logic table
      * @return database sharding values
+     * 返回 内部包含的一组value
      */
     public static Collection<Comparable<?>> getDatabaseShardingValues(final String logicTable) {
         return null == HINT_MANAGER_HOLDER.get() ? Collections.<Comparable<?>>emptyList() : HINT_MANAGER_HOLDER.get().databaseShardingValues.get(logicTable);

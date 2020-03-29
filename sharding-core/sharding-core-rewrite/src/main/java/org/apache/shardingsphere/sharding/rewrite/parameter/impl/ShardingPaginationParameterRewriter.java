@@ -31,26 +31,44 @@ import java.util.List;
 
 /**
  * Sharding pagination parameter rewriter.
+ * 处理分页参数的 修改器
  */
 @Setter
 public final class ShardingPaginationParameterRewriter implements ParameterRewriter<SelectStatementContext>, ShardingRouteContextAware {
     
     private ShardingRouteContext shardingRouteContext;
-    
+
+    // 是查询语句 有分页信息  非单路由
     @Override
     public boolean isNeedRewrite(final SQLStatementContext sqlStatementContext) {
         return sqlStatementContext instanceof SelectStatementContext
                 && ((SelectStatementContext) sqlStatementContext).getPaginationContext().isHasPagination() && !shardingRouteContext.getRouteResult().isSingleRouting();
     }
-    
+
+    /**
+     * 对语句进行重写
+     * @param parameterBuilder parameter builder
+     * @param selectStatementContext
+     * @param parameters SQL parameters
+     */
     @Override
     public void rewrite(final ParameterBuilder parameterBuilder, final SelectStatementContext selectStatementContext, final List<Object> parameters) {
         PaginationContext pagination = selectStatementContext.getPaginationContext();
+
+        // 因为分表后 进行排序的 为了防止数据的丢失 都需要拉取全部数据之后重新排序
+        // 代表从多少开始   这个pagination.getOffsetParameterIndex() 应该就是指分页参数 在 parameters 的第几个
         pagination.getOffsetParameterIndex().ifPresent(offsetParameterIndex -> rewriteOffset(pagination, offsetParameterIndex, (StandardParameterBuilder) parameterBuilder));
+        // 代表读多少条
         pagination.getRowCountParameterIndex().ifPresent(
             rowCountParameterIndex -> rewriteRowCount(pagination, rowCountParameterIndex, (StandardParameterBuilder) parameterBuilder, selectStatementContext));
     }
-    
+
+    /**
+     * 从 limit x,y 修改成 limit 0,y
+     * @param pagination
+     * @param offsetParameterIndex
+     * @param parameterBuilder
+     */
     private void rewriteOffset(final PaginationContext pagination, final int offsetParameterIndex, final StandardParameterBuilder parameterBuilder) {
         parameterBuilder.addReplacedParameters(offsetParameterIndex, pagination.getRevisedOffset());
     }

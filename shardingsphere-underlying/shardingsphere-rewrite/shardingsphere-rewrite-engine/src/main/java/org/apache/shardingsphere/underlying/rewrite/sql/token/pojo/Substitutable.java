@@ -19,6 +19,7 @@ package org.apache.shardingsphere.underlying.rewrite.sql.token.pojo;
 
 /**
  * Substitute available.
+ * 代表某段是可替换的
  */
 public interface Substitutable {
     

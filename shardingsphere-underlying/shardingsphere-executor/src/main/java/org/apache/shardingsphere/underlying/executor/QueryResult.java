@@ -23,6 +23,7 @@ import java.util.Calendar;
 
 /**
  * Query result form SQL.
+ * 代表查询的结果 对应 ResultSet
  */
 public interface QueryResult {
     
@@ -31,6 +32,7 @@ public interface QueryResult {
      *
      * @return has next data
      * @throws SQLException SQL Exception
+     * 获取下一条记录
      */
     boolean next() throws SQLException;
     
@@ -41,6 +43,7 @@ public interface QueryResult {
      * @param type class type of data value
      * @return data value
      * @throws SQLException SQL Exception
+     * 返回当前光标所指向的某个对象的某个列
      */
     Object getValue(int columnIndex, Class<?> type) throws SQLException;
     
@@ -52,6 +55,7 @@ public interface QueryResult {
      * @param calendar calendar
      * @return calendar value
      * @throws SQLException SQL Exception
+     * 获取日期格式的值
      */
     Object getCalendarValue(int columnIndex, Class<?> type, Calendar calendar) throws SQLException;
     
@@ -59,7 +63,7 @@ public interface QueryResult {
      * Get InputStream.
      *
      * @param columnIndex column index
-     * @param type class type of data value
+     * @param type class type of data value  数据类型全限定名
      * @return InputStream
      * @throws SQLException SQL Exception
      */
@@ -96,6 +100,7 @@ public interface QueryResult {
      * @param columnIndex column index
      * @return true if column is case sensitive, otherwise false
      * @throws SQLException SQL Exception
+     * 是否大小写敏感
      */
     boolean isCaseSensitive(int columnIndex) throws SQLException;
 }

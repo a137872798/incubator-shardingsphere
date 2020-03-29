@@ -43,17 +43,27 @@ import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+/**
+ * 该对象作为起点
+ */
 public final class ShardingDataSourceFactoryTest {
     
     @Test
     public void assertCreateDataSourceWithShardingRuleAndProperties() throws SQLException {
+        // 指定所有table
         ShardingRuleConfiguration shardingRuleConfig = createShardingRuleConfig();
+        // 开始读取相关配置
         Properties props = new Properties();
         DataSource dataSource = ShardingDataSourceFactory.createDataSource(getDataSourceMap(), shardingRuleConfig, props);
         assertNotNull(getShardingRule(dataSource));
         assertThat(getProperties(dataSource), is(props));
     }
-    
+
+    /**
+     * 获取当前可使用的所有数据源
+     * @return
+     * @throws SQLException
+     */
     private Map<String, DataSource> getDataSourceMap() throws SQLException {
         DataSource dataSource = mock(DataSource.class);
         Connection connection = mock(Connection.class);
@@ -75,9 +85,14 @@ public final class ShardingDataSourceFactoryTest {
         result.put("ds", dataSource);
         return result;
     }
-    
+
+    /**
+     * 创建分表的规则配置
+     * @return
+     */
     private ShardingRuleConfiguration createShardingRuleConfig() {
         ShardingRuleConfiguration result = new ShardingRuleConfiguration();
+        // 添加一组物理表 这样在执行sql的时候 就会负载到这2个表
         result.getTableRuleConfigs().add(new TableRuleConfiguration("logicTable", "ds.table_${0..2}"));
         return result;
     }

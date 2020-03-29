@@ -19,6 +19,7 @@ package org.apache.shardingsphere.underlying.common.hook;
 
 /**
  * Root invoke hook.
+ * 根调用钩子
  */
 public interface RootInvokeHook {
     

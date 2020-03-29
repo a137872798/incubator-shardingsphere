@@ -38,6 +38,7 @@ public interface SQLExecutePrepareCallback {
      * @param connectionSize connection size
      * @return connection
      * @throws SQLException SQL exception
+     * 根据连接模式 和允许申请的连接数
      */
     List<Connection> getConnections(ConnectionMode connectionMode, String dataSourceName, int connectionSize) throws SQLException;
     

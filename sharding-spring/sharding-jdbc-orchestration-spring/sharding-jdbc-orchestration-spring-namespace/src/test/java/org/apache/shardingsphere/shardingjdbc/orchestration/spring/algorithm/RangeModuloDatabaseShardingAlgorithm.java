@@ -28,6 +28,7 @@ public final class RangeModuloDatabaseShardingAlgorithm implements RangeSharding
     @Override
     public Collection<String> doSharding(final Collection<String> availableTargetNames, final RangeShardingValue<Integer> shardingValue) {
         Collection<String> result = new LinkedHashSet<>(availableTargetNames.size());
+        // 从范围下下限直到范围上限 如果是个半闭包呢???   实际上就从枚举每个值 变成了 一个从一个范围内找到会涉及的表
         for (Integer i = shardingValue.getValueRange().lowerEndpoint(); i <= shardingValue.getValueRange().upperEndpoint(); i++) {
             for (String each : availableTargetNames) {
                 if (each.endsWith(i % 2 + "")) {

@@ -28,14 +28,21 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * ShardingSphere executor service.
+ * shardingSphere 内部定义的一组线程池
  */
 @Getter
 public final class ShardingSphereExecutorService {
     
     private static final String DEFAULT_NAME_FORMAT = "%d";
-    
+
+    /**
+     * 这里单线程是专门用来关闭的
+     */
     private static final ExecutorService SHUTDOWN_EXECUTOR = Executors.newSingleThreadExecutor(ShardingSphereThreadFactoryBuilder.build("Executor-Engine-Closer"));
-    
+
+    /**
+     * 该对象就是在普通线程池基础上增加了监听器   当提交任务后会返回一个 ListenFuture  为该对象添加了监听器后 完成时会触发回调
+     */
     private ListeningExecutorService executorService;
     
     public ShardingSphereExecutorService(final int executorSize) {
@@ -43,7 +50,9 @@ public final class ShardingSphereExecutorService {
     }
     
     public ShardingSphereExecutorService(final int executorSize, final String nameFormat) {
+        // 监听器Executor 只是一个装饰器 内部还是JDK 的线程池
         executorService = MoreExecutors.listeningDecorator(getExecutorService(executorSize, nameFormat));
+        // 为Runtime 增加终结钩子 当程序终止时 会关闭线程池
         MoreExecutors.addDelayedShutdownHook(executorService, 60, TimeUnit.SECONDS);
     }
     
@@ -54,6 +63,7 @@ public final class ShardingSphereExecutorService {
     
     /**
      * Close executor service.
+     * 这里是异步关闭 不会阻塞主线程
      */
     public void close() {
         SHUTDOWN_EXECUTOR.execute(() -> {

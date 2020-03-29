@@ -25,10 +25,14 @@ import java.util.List;
 
 /**
  * Relation meta data.
+ * 该对象存放的是某个表的所有列信息
  */
 @Getter
 public final class RelationMetaData {
-    
+
+    /**
+     * 某个表的所有列名
+     */
     private final List<String> columnNames;
     
     public RelationMetaData(final Collection<String> columnNames) {

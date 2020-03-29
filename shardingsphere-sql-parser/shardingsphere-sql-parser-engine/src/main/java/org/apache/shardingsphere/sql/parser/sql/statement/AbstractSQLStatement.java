@@ -26,6 +26,9 @@ import lombok.Setter;
 @Getter
 @Setter
 public abstract class AbstractSQLStatement implements SQLStatement {
-    
+
+    /**
+     * 携带了多少参数
+     */
     private int parameterCount;
 }

@@ -37,11 +37,15 @@ import java.util.List;
 
 /**
  * Query result for memory loading.
+ * 直接将结果加载到内存中
  */
 public final class MemoryQueryResult implements QueryResult {
     
     private final ResultSetMetaData resultSetMetaData;
-    
+
+    /**
+     * 该迭代器内部已经包含了 ResultSet 的全部数据了
+     */
     private final Iterator<List<Object>> rows;
     
     private List<Object> currentRow;

@@ -33,9 +33,10 @@ public final class GroupByContextEngine {
     
     /**
      * Create group by context.
-     *
+     * 从语法树的 Segment  到 Items 是一一对应的
      * @param selectStatement select statement
      * @return group by context
+     * 这里是解析 会话中出现的groupBy的部分
      */
     public GroupByContext createGroupByContext(final SelectStatement selectStatement) {
         if (!selectStatement.getGroupBy().isPresent()) {

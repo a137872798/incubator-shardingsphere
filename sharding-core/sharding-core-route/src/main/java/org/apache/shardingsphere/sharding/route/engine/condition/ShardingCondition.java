@@ -28,12 +28,19 @@ import java.util.List;
 
 /**
  * Sharding condition.
+ * 该对象决定了 一个sql 会以怎样的方式路由到各个物理表
  */
 @Getter
 @ToString
 public class ShardingCondition {
-    
+
+    /**
+     * 某列以及对应物理表的映射关系  如果是where 语句 那么 会携带了针对该列的约束条件
+     */
     private final List<RouteValue> routeValues = new LinkedList<>();
-    
+
+    /**
+     * 本次涉及到的所有物理表
+     */
     private final Collection<DataNode> dataNodes = new LinkedList<>();
 }

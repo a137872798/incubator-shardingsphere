@@ -21,6 +21,7 @@ import org.apache.shardingsphere.sql.parser.sql.ASTNode;
 
 /**
  * Predicate right value.
+ * 针对右值的谓语???
  */
 public interface PredicateRightValue extends ASTNode {
 }

@@ -27,6 +27,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Random slave database load-balance algorithm.
+ * 均衡负载规则 这里使用随机策略
  */
 @Getter
 @Setter
@@ -38,7 +39,14 @@ public final class RandomMasterSlaveLoadBalanceAlgorithm implements MasterSlaveL
     public String getType() {
         return "RANDOM";
     }
-    
+
+    /**
+     * 当遇到读操作时 从SlaveDataSource 中随机返回一个
+     * @param name master-slave logic data source name
+     * @param masterDataSourceName name of master data sources
+     * @param slaveDataSourceNames names of slave data sources
+     * @return
+     */
     @Override
     public String getDataSource(final String name, final String masterDataSourceName, final List<String> slaveDataSourceNames) {
         return slaveDataSourceNames.get(ThreadLocalRandom.current().nextInt(slaveDataSourceNames.size()));

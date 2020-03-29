@@ -35,10 +35,14 @@ import java.util.ServiceLoader;
 
 /**
  * Sharding transaction manager engine.
+ * 这里一般会涉及到分布式事务 先不看
  */
 @Slf4j
 public final class ShardingTransactionManagerEngine {
-    
+
+    /**
+     * 内部包含了本次启动过程中所有的事务管理器
+     */
     private final Map<TransactionType, ShardingTransactionManager> transactionManagerMap = new EnumMap<>(TransactionType.class);
     
     public ShardingTransactionManagerEngine() {
@@ -67,7 +71,12 @@ public final class ShardingTransactionManagerEngine {
             entry.getValue().init(databaseType, getResourceDataSources(dataSourceMap));
         }
     }
-    
+
+    /**
+     * 包装出一个 ResourceDataSource 用来解耦
+     * @param dataSourceMap
+     * @return
+     */
     private Collection<ResourceDataSource> getResourceDataSources(final Map<String, DataSource> dataSourceMap) {
         List<ResourceDataSource> result = new LinkedList<>();
         for (Map.Entry<String, DataSource> entry : dataSourceMap.entrySet()) {
@@ -81,9 +90,11 @@ public final class ShardingTransactionManagerEngine {
      *
      * @param transactionType transaction type
      * @return sharding transaction manager
+     * 根据不同的事务类型 来获取对应的管理器
      */
     public ShardingTransactionManager getTransactionManager(final TransactionType transactionType) {
         ShardingTransactionManager result = transactionManagerMap.get(transactionType);
+        // 分本地模式要进行非空校验 也就是Local的话可以返回null
         if (TransactionType.LOCAL != transactionType) {
             Preconditions.checkNotNull(result, "Cannot find transaction manager of [%s]", transactionType);
         }

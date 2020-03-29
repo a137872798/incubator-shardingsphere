@@ -23,6 +23,7 @@ import java.util.Collection;
 
 /**
  * Database type.
+ * 代表数据源的类型  比如 mysql
  */
 public interface DatabaseType {
     

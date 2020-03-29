@@ -27,7 +27,8 @@ import org.apache.shardingsphere.sql.parser.relation.statement.SQLStatementConte
 @RequiredArgsConstructor
 @Getter
 public class RouteContext {
-    
+
+    // 路由上下文 包含了 本次的会话上下文 以及执行结果
     private final SQLStatementContext sqlStatementContext;
     
     private final RouteResult routeResult;

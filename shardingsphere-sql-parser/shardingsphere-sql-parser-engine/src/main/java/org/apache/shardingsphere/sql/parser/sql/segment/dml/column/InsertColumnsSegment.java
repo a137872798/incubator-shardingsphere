@@ -33,6 +33,9 @@ public final class InsertColumnsSegment implements SQLSegment {
     private final int startIndex;
     
     private final int stopIndex;
-    
+
+    /**
+     * 一个插入语句对应多个 列片段  应该是代表本次插入的语句涉及到了多少个列
+     */
     private final Collection<ColumnSegment> columns;
 }

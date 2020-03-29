@@ -36,6 +36,9 @@ public final class WhereSegment implements SQLSegment {
     private final int startIndex;
     
     private final int stopIndex;
-    
+
+    /**
+     * 代表where 下具体的条件
+     */
     private final Collection<AndPredicate> andPredicates = new LinkedList<>();
 }

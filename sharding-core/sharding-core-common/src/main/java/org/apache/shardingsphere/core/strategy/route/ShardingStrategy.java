@@ -24,6 +24,7 @@ import java.util.Collection;
 
 /**
  * Sharding strategy.
+ * 分表策略对象
  */
 public interface ShardingStrategy {
     
@@ -37,7 +38,7 @@ public interface ShardingStrategy {
     /**
      * Sharding.
      *
-     * @param availableTargetNames available data sources or tables's names
+     * @param availableTargetNames available data sources or tables's names  所有候选者
      * @param shardingValues sharding values
      * @param properties ShardingSphere properties
      * @return sharding results for data sources or tables's names

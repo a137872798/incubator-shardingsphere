@@ -23,10 +23,12 @@ import org.apache.shardingsphere.api.sharding.standard.PreciseShardingValue;
 import java.util.Collection;
 
 public final class PreciseModuloTableShardingAlgorithm implements PreciseShardingAlgorithm<Integer> {
-    
+
+
     @Override
     public String doSharding(final Collection<String> availableTargetNames, final PreciseShardingValue<Integer> shardingValue) {
         for (String each : availableTargetNames) {
+            // 怎么会连分表数量都确定了呢???
             if (each.endsWith(shardingValue.getValue() % 4 + "")) {
                 return each;
             }

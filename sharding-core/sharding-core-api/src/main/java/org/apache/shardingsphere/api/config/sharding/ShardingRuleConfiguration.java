@@ -29,6 +29,7 @@ import java.util.LinkedList;
 
 /**
  * Sharding rule configuration.
+ * 作为最外层的配置  想当于其他配置的总集
  */
 @Getter
 @Setter
@@ -39,7 +40,10 @@ public final class ShardingRuleConfiguration implements RuleConfiguration {
     private Collection<String> bindingTableGroups = new LinkedList<>();
     
     private Collection<String> broadcastTables = new LinkedList<>();
-    
+
+    /**
+     * 默认的数据源名称
+     */
     private String defaultDataSourceName;
     
     private ShardingStrategyConfiguration defaultDatabaseShardingStrategyConfig;

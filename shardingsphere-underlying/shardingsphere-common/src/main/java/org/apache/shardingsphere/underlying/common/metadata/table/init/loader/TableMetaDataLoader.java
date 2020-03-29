@@ -26,6 +26,7 @@ import java.sql.SQLException;
 
 /**
  * Table meta data loader.
+ * TableMetaDataInitializer 用于获取表元数据信息的接口
  */
 public interface TableMetaDataLoader<T extends BaseRule> extends TableMetaDataInitializer {
     
@@ -36,6 +37,7 @@ public interface TableMetaDataLoader<T extends BaseRule> extends TableMetaDataIn
      * @param rule rule
      * @return table meta data
      * @throws SQLException SQL exception
+     * 通过限定表名 和规则对象 加载表的元数据信息
      */
     TableMetaData load(String tableName, T rule) throws SQLException;
     

@@ -37,13 +37,20 @@ import java.util.Optional;
 
 /**
  * Insert statement.
+ * 插入会话
  */
 @Getter
 @Setter
 public final class InsertStatement extends DMLStatement {
-    
+
+    /**
+     * 表相关的 段  比如 alisaSegment  ownerSegment TableNameSegment
+     */
     private SimpleTableSegment table;
-    
+
+    /**
+     * 用于描述本次 insert 语句相关的列信息
+     */
     private InsertColumnsSegment insertColumns;
     
     private SetAssignmentSegment setAssignment;

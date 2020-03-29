@@ -40,16 +40,26 @@ import java.util.Optional;
 
 /**
  * Merge entry.
+ * 融合后的实体对象
  */
 @RequiredArgsConstructor
 public final class MergeEntry {
-    
+
+    /**
+     * 本次关联的数据源类型
+     */
     private final DatabaseType databaseType;
-    
+
+    /**
+     * 每个表 以及它们的所有列
+     */
     private final RelationMetas relationMetas;
     
     private final ShardingSphereProperties properties;
-    
+
+    /**
+     * 这里保存了  处理使用的规则 以及处理结果引擎
+     */
     private final Map<BaseRule, ResultProcessEngine> engines;
     
     /**
@@ -65,11 +75,19 @@ public final class MergeEntry {
         Optional<MergedResult> result = mergedResult.isPresent() ? Optional.of(decorate(mergedResult.get(), sqlStatementContext)) : decorate(queryResults.get(0), sqlStatementContext);
         return result.orElseGet(() -> new TransparentMergedResult(queryResults.get(0)));
     }
-    
+
+    /**
+     * 将一组查询对象 配合上下文信息进行结合
+     * @param queryResults
+     * @param sqlStatementContext
+     * @return
+     * @throws SQLException
+     */
     @SuppressWarnings("unchecked")
     private Optional<MergedResult> merge(final List<QueryResult> queryResults, final SQLStatementContext sqlStatementContext) throws SQLException {
         for (Entry<BaseRule, ResultProcessEngine> entry : engines.entrySet()) {
             if (entry.getValue() instanceof ResultMergerEngine) {
+                // 生成 merger 对象
                 ResultMerger resultMerger = ((ResultMergerEngine) entry.getValue()).newInstance(databaseType, entry.getKey(), properties, sqlStatementContext);
                 return Optional.of(resultMerger.merge(queryResults, sqlStatementContext, relationMetas));
             }

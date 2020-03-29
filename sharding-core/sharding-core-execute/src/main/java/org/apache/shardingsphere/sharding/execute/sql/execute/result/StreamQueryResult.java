@@ -33,9 +33,13 @@ import java.util.Calendar;
 
 /**
  * Query result for stream loading.
+ * 结果包装对象   就是一个代理模式
  */
 public final class StreamQueryResult implements QueryResult {
-    
+
+    /**
+     * 绑定在结果集上的元数据
+     */
     private final ResultSetMetaData resultSetMetaData;
     
     private final ResultSet resultSet;

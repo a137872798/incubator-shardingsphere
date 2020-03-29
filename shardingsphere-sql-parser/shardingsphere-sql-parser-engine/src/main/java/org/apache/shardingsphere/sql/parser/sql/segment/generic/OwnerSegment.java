@@ -32,6 +32,9 @@ public final class OwnerSegment implements SQLSegment {
     private final int startIndex;
     
     private final int stopIndex;
-    
+
+    /**
+     * 包含了 被引用符包裹的字符
+     */
     private final IdentifierValue identifier;
 }

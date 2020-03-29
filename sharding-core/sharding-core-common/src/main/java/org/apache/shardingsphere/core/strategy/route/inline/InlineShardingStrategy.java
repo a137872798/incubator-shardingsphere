@@ -38,11 +38,18 @@ import java.util.TreeSet;
 
 /**
  * Standard sharding strategy.
+ * 通过解析表达式 来确定选择的逻辑
  */
 public final class InlineShardingStrategy implements ShardingStrategy {
-    
+
+    /**
+     * 作为指标的列
+     */
     private final String shardingColumn;
-    
+
+    /**
+     * 表达式解析结果
+     */
     private final Closure<?> closure;
     
     public InlineShardingStrategy(final InlineShardingStrategyConfiguration inlineShardingStrategyConfig) {
@@ -56,6 +63,7 @@ public final class InlineShardingStrategy implements ShardingStrategy {
     @Override
     public Collection<String> doSharding(final Collection<String> availableTargetNames, final Collection<RouteValue> shardingValues, final ShardingSphereProperties properties) {
         RouteValue shardingValue = shardingValues.iterator().next();
+        // 这里全数返回了   该属性默认是false  先不管
         if (properties.<Boolean>getValue(PropertiesConstant.ALLOW_RANGE_QUERY_WITH_INLINE_SHARDING) && shardingValue instanceof RangeRouteValue) {
             return availableTargetNames;
         }
@@ -63,13 +71,14 @@ public final class InlineShardingStrategy implements ShardingStrategy {
         Collection<String> shardingResult = doSharding((ListRouteValue) shardingValue);
         Collection<String> result = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
         for (String each : shardingResult) {
+            // 包含的才添加到容器中
             if (availableTargetNames.contains(each)) {
                 result.add(each);
             }
         }
         return result;
     }
-    
+
     private Collection<String> doSharding(final ListRouteValue shardingValue) {
         Collection<String> result = new LinkedList<>();
         for (PreciseShardingValue<?> each : transferToPreciseShardingValues(shardingValue)) {

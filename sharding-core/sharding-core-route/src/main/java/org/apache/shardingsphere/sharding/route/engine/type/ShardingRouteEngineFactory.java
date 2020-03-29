@@ -57,17 +57,20 @@ public final class ShardingRouteEngineFactory {
     /**
      * Create new instance of routing engine.
      * 
-     * @param shardingRule sharding rule
-     * @param metaData meta data of ShardingSphere
+     * @param shardingRule sharding rule   本次分表规则
+     * @param metaData meta data of ShardingSphere    相关元数据
      * @param sqlStatementContext SQL statement context
-     * @param shardingConditions shardingConditions
+     * @param shardingConditions shardingConditions  影响分表的条件对象
      * @param properties sharding sphere properties
      * @return new instance of routing engine
+     * 生成路由引擎对象
      */
     public static ShardingRouteEngine newInstance(final ShardingRule shardingRule,
                                                   final ShardingSphereMetaData metaData, final SQLStatementContext sqlStatementContext,
                                                   final ShardingConditions shardingConditions, final ShardingSphereProperties properties) {
+        // 获取会话对象
         SQLStatement sqlStatement = sqlStatementContext.getSqlStatement();
+        // 获取本次所有的表名
         Collection<String> tableNames = sqlStatementContext.getTablesContext().getTableNames();
         if (sqlStatement instanceof TCLStatement) {
             return new ShardingDatabaseBroadcastRoutingEngine();
@@ -87,12 +90,17 @@ public final class ShardingRouteEngineFactory {
         if (shardingRule.isAllBroadcastTables(tableNames)) {
             return sqlStatement instanceof SelectStatement ? new ShardingUnicastRoutingEngine(tableNames) : new ShardingDatabaseBroadcastRoutingEngine();
         }
+        // 只看 DML 相关的路由引擎
+
+
         if (sqlStatementContext.getSqlStatement() instanceof DMLStatement && tableNames.isEmpty() && shardingRule.hasDefaultDataSourceName()) {
             return new ShardingDefaultDatabaseRoutingEngine(tableNames);
         }
+        // 代表没有分表键相关的条件 那么就看作是单表处理
         if (sqlStatementContext.getSqlStatement() instanceof DMLStatement && shardingConditions.isAlwaysFalse() || tableNames.isEmpty() || !shardingRule.tableRuleExists(tableNames)) {
             return new ShardingUnicastRoutingEngine(tableNames);
         }
+        // 一般就是这种情况
         return getShardingRoutingEngine(shardingRule, sqlStatementContext, shardingConditions, tableNames, properties);
     }
     
@@ -124,14 +132,27 @@ public final class ShardingRouteEngineFactory {
         }
         return false;
     }
-    
+
+    /**
+     *
+     * @param shardingRule
+     * @param sqlStatementContext
+     * @param shardingConditions
+     * @param tableNames
+     * @param properties
+     * @return
+     */
     private static ShardingRouteEngine getShardingRoutingEngine(final ShardingRule shardingRule, final SQLStatementContext sqlStatementContext,
                                                                 final ShardingConditions shardingConditions, final Collection<String> tableNames, final ShardingSphereProperties properties) {
+        // 这里过滤掉了不包含 TableRule 的逻辑表
         Collection<String> shardingTableNames = shardingRule.getShardingLogicTableNames(tableNames);
+        // 如果只有一个逻辑表 就是简单操作  如果本次所有逻辑表 绑定了同一个tableRule 那么返回的也是标准对象 (也就是绑定的数据每次都是发往相同的物理节点)
         if (1 == shardingTableNames.size() || shardingRule.isAllBindingTables(shardingTableNames)) {
+            // 这样只要传入一个逻辑表名就可以
             return new ShardingStandardRoutingEngine(shardingTableNames.iterator().next(), sqlStatementContext, shardingConditions, properties);
         }
         // TODO config for cartesian set
+        // 每个表规则对象都有一个 strategy 那么如果每个逻辑表都有各自的  分表策略 就会使用 complexRoutingEngine 进行路由
         return new ShardingComplexRoutingEngine(tableNames, sqlStatementContext, shardingConditions, properties);
     }
 }

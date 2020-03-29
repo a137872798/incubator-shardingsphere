@@ -19,6 +19,7 @@ package org.apache.shardingsphere.transaction.core;
 
 /**
  * Hold transaction type for current thread.
+ * 获取当前线程绑定的事务类型信息   默认是本地事务 如果发现是分布式事务 就要借助 TransactionManager 接口了
  */
 public final class TransactionTypeHolder {
     

@@ -26,6 +26,7 @@ import java.util.UUID;
 
 /**
  * UUID key generator.
+ * 基于UUID 算法生成唯一标识
  */
 @Getter
 @Setter

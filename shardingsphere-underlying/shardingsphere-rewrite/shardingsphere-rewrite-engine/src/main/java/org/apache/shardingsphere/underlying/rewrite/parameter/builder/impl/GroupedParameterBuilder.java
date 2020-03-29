@@ -28,6 +28,7 @@ import java.util.Optional;
 
 /**
  * Grouped parameter builder.
+ * 基于分组的 参数构建对象
  */
 public final class GroupedParameterBuilder implements ParameterBuilder {
     
@@ -37,9 +38,16 @@ public final class GroupedParameterBuilder implements ParameterBuilder {
     @Getter
     private final List<Object> onDuplicateKeyUpdateAddedParameters = new LinkedList<>();
 
+    /**
+     * 本次派生列
+     */
     @Setter
     private String derivedColumnName;
-    
+
+    /**
+     * 使用多个子插入语句进行初始化
+     * @param groupedParameters
+     */
     public GroupedParameterBuilder(final List<List<Object>> groupedParameters) {
         parameterBuilders = new ArrayList<>(groupedParameters.size());
         for (List<Object> each : groupedParameters) {

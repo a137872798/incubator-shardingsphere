@@ -33,7 +33,11 @@ import java.util.Map.Entry;
  */
 @RequiredArgsConstructor
 public final class TableMetaDataInitializerEntry {
-    
+
+    /**
+     * key 代表加载规则  value 可以根据逻辑表信息 获取到所有物理表的列信息 并且还进行校验 确保所有物理表的列信息一致
+     * 一般map 只有一组键值对
+     */
     private final Map<BaseRule, TableMetaDataInitializer> initializes;
     
     /**
@@ -73,11 +77,17 @@ public final class TableMetaDataInitializerEntry {
      *
      * @return table metas
      * @throws SQLException SQL exception
+     * 初始化时 装填所有数据源 这里初始化就要获取数据源的列信息
      */
     public TableMetas initAll() throws SQLException {
         return decorateAll(loadAll());
     }
-    
+
+    /**
+     * 开始加载所有表元数据
+     * @return
+     * @throws SQLException
+     */
     @SuppressWarnings("unchecked")
     private TableMetas loadAll() throws SQLException {
         for (Entry<BaseRule, TableMetaDataInitializer> entry : initializes.entrySet()) {
@@ -87,11 +97,17 @@ public final class TableMetaDataInitializerEntry {
         }
         throw new IllegalStateException("Cannot find class `TableMetaDataLoader`");
     }
-    
+
+    /**
+     * 生成一层包装
+     * @param tableMetas
+     * @return
+     */
     @SuppressWarnings("unchecked")
     private TableMetas decorateAll(final TableMetas tableMetas) {
         TableMetas result = tableMetas;
         for (Entry<BaseRule, TableMetaDataInitializer> entry : initializes.entrySet()) {
+            // 如果初始化对象 具备装饰的功能 那么在装饰后返回  ShardingTableMetaDataLoader
             if (entry.getValue() instanceof TableMetaDataDecorator) {
                 result = ((TableMetaDataDecorator) entry.getValue()).decorate(result, entry.getKey());
             }

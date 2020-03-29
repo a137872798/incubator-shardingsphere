@@ -35,9 +35,13 @@ import java.util.Optional;
 
 /**
  * Condition value generator for compare operator.
+ * 针对 where 下的具体条件 比较某个字段与值
  */
 public final class ConditionValueCompareOperatorGenerator implements ConditionValueGenerator<PredicateCompareRightValue> {
 
+    /**
+     * 某个字段等于某个值
+     */
     private static final String EQUAL = "=";
 
     private static final String GREATER_THAN = ">";
@@ -52,20 +56,31 @@ public final class ConditionValueCompareOperatorGenerator implements ConditionVa
     
     @Override
     public Optional<RouteValue> generate(final PredicateCompareRightValue predicateRightValue, final Column column, final List<Object> parameters) {
+        // 获取操作符信息
         String operator = predicateRightValue.getOperator();
+        // 非正常情况 返回空
         if (!isSupportedOperator(operator)) {
             return Optional.empty();
         }
+        // 根据表达式 确定本次使用的参数
         Optional<Comparable> routeValue = new ConditionValue(predicateRightValue.getExpression(), parameters).getValue();
         if (routeValue.isPresent()) {
             return generate(routeValue.get(), column, operator);
         }
+        // 判断是否是 NOW()  那么就不会使用到 params 了
         if (ExpressionConditionUtils.isNowExpression(predicateRightValue.getExpression())) {
             return generate(new SPITimeService().getTime(), column, operator);
         }
         return Optional.empty();
     }
 
+    /**
+     * 生成 RouteValue
+     * @param comparable
+     * @param column
+     * @param operator
+     * @return
+     */
     private Optional<RouteValue> generate(final Comparable comparable, final Column column, final String operator) {
         String columnName = column.getName();
         String tableName = column.getTableName();

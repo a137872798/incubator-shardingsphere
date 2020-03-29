@@ -29,6 +29,9 @@ import java.util.Map;
 @RequiredArgsConstructor
 @Getter
 public final class Authentication {
-    
+
+    /**
+     * 内部存放一组校验规则
+     */
     private Map<String, ProxyUser> users = new LinkedHashMap<>();
 }

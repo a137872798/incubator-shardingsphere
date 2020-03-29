@@ -27,6 +27,7 @@ import java.util.Collections;
 
 /**
  * None sharding strategy.
+ * 不使用任何 策略 而是直接返回原列表
  */
 @Getter
 public final class NoneShardingStrategy implements ShardingStrategy {

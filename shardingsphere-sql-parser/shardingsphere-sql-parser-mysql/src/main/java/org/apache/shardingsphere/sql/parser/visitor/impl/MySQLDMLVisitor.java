@@ -116,6 +116,8 @@ import java.util.List;
 
 /**
  * DML visitor for MySQL.
+ * 只看这个类的实现  理解一下思路
+ * sql 本身会被抽象成语法树 之后通过visitor 追加shardingSphere自己的逻辑
  */
 public final class MySQLDMLVisitor extends MySQLVisitor implements DMLVisitor {
     
@@ -128,10 +130,16 @@ public final class MySQLDMLVisitor extends MySQLVisitor implements DMLVisitor {
     public ASTNode visitDoStatement(final DoStatementContext ctx) {
         return new DoStatement();
     }
-    
+
+    /**
+     * 当检测到 insert Token 时
+     * @param ctx
+     * @return
+     */
     @Override
     public ASTNode visitInsert(final InsertContext ctx) {
         // TODO :FIXME, since there is no segment for insertValuesClause, InsertStatement is created by sub rule.
+        // 生成一个对应的 会话对象
         InsertStatement result;
         if (null != ctx.insertValuesClause()) {
             result = (InsertStatement) visit(ctx.insertValuesClause());

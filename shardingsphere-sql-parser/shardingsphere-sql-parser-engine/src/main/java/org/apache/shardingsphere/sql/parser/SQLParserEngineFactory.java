@@ -28,7 +28,10 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class SQLParserEngineFactory {
-    
+
+    /**
+     * 惰性加载 这样能确保不会创建多余的对象
+     */
     private static final Map<String, SQLParserEngine> ENGINES = new ConcurrentHashMap<>();
     
     /**

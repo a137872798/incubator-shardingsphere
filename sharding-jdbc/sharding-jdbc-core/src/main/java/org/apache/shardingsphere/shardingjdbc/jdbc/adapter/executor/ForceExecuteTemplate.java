@@ -25,14 +25,15 @@ import java.util.LinkedList;
  * Force execute template.
  *
  * @param <T> type of targets to be executed
+ *           一个执行sql 的模板对象
  */
 public final class ForceExecuteTemplate<T> {
     
     /**
      * Force execute.
      * 
-     * @param targets targets to be executed
-     * @param callback force execute callback
+     * @param targets targets to be executed 一组待执行的对象
+     * @param callback force execute callback 该回调对象封装了执行的逻辑
      * @throws SQLException throw SQL exception after all targets are executed
      */
     public void execute(final Collection<T> targets, final ForceExecuteCallback<T> callback) throws SQLException {
@@ -46,7 +47,12 @@ public final class ForceExecuteTemplate<T> {
         }
         throwSQLExceptionIfNecessary(exceptions);
     }
-    
+
+    /**
+     * 当执行批量操作时 抛出相关的异常
+     * @param exceptions
+     * @throws SQLException
+     */
     private void throwSQLExceptionIfNecessary(final Collection<SQLException> exceptions) throws SQLException {
         if (exceptions.isEmpty()) {
             return;

@@ -31,11 +31,21 @@ import java.util.Map;
 
 /**
  * {@code ResultSet} returned database meta data.
+ * 这里替换了原有的 结果集相关的元数据信息   这里相当于一个适配层
+ * 注意每次获取结果集都生成了一个新的对象 实际上可以利用 对象池的方式减少GC
+ * 而且代理的resultSet 内部会提前读取所有的结果集 并做去重操作 原生resultSet 应该是不会提前读取的 而是按需读取
+ * 提前读取了所有数据才方便做合并操作
  */
 public abstract class ResultSetReturnedDatabaseMetaData extends WrapperAdapter implements DatabaseMetaData {
-    
+
+    /**
+     * 本次启动所涉及到的所有数据源
+     */
     private final Map<String, DataSource> dataSourceMap;
-    
+
+    /**
+     * 本次分表使用的规则总集
+     */
     private final ShardingRule shardingRule;
     
     private Connection currentConnection;
@@ -46,21 +56,38 @@ public abstract class ResultSetReturnedDatabaseMetaData extends WrapperAdapter i
         this.dataSourceMap = dataSourceMap;
         this.shardingRule = shardingRule;
     }
-    
+
+    /**
+     * 通过元数据信息(DatabaseMetaData) 也可以获得连接
+     * @return
+     * @throws SQLException
+     */
     @Override
     public final Connection getConnection() throws SQLException {
         return getCurrentConnection();
     }
-    
+
+    // 以下方法都是对 resultSet的增强 首先通过connection 获取到原生的resultSet 之后与 shardingRule 包装成一个新对象 推测该对象内部有一些额外的逻辑
+
+    /**
+     * 获取结果集的类型
+     * @param catalog
+     * @param schemaPattern
+     * @param typeNamePattern
+     * @return
+     * @throws SQLException
+     */
     @Override
     public final ResultSet getSuperTypes(final String catalog, final String schemaPattern, final String typeNamePattern) throws SQLException {
         try (Connection connection = getConnection()) {
+            // 这里先调用原生的方法 并将对象与 rule 对象一起包装
             return new DatabaseMetaDataResultSet(connection.getMetaData().getSuperTypes(catalog, schemaPattern, typeNamePattern), shardingRule);
         }
     }
     
     @Override
     public final ResultSet getSuperTables(final String catalog, final String schemaPattern, final String tableNamePattern) throws SQLException {
+        // 这里对正则也做了处理
         String actualTableNamePattern = getActualTableNamePattern(tableNamePattern);
         try (Connection connection = getConnection()) {
             return new DatabaseMetaDataResultSet(connection.getMetaData().getSuperTables(catalog, schemaPattern, actualTableNamePattern), shardingRule);
@@ -249,14 +276,20 @@ public abstract class ResultSetReturnedDatabaseMetaData extends WrapperAdapter i
     
     private Connection getCurrentConnection() throws SQLException {
         if (null == currentConnection || currentConnection.isClosed()) {
+            // 如果没有指定分表规则 那么获取第一个数据源 否则根据当前数据源的名称来获取对应的连接对象
             DataSource dataSource = null == shardingRule ? dataSourceMap.values().iterator().next() : dataSourceMap.get(getCurrentDataSourceName());
             currentConnection = dataSource.getConnection();
         }
         return currentConnection;
     }
-    
+
+    /**
+     * 在当前数据源名称未指定的情况下 返回一个随机名
+     * @return
+     */
     private String getCurrentDataSourceName() {
         currentDataSourceName = null == currentDataSourceName ? shardingRule.getShardingDataSourceNames().getRandomDataSourceName() : currentDataSourceName;
+        // 这里返回的是主数据源的名称
         return shardingRule.getShardingDataSourceNames().getRawMasterDataSourceName(currentDataSourceName);
     }
     
@@ -264,6 +297,7 @@ public abstract class ResultSetReturnedDatabaseMetaData extends WrapperAdapter i
         if (null == tableNamePattern || null == shardingRule) {
             return tableNamePattern;
         }
+        // 是否有关于该逻辑表名相关的 一组分表规则  如果没有的话返回原正则名 也就是尽可能保持不变
         return shardingRule.findTableRule(tableNamePattern).isPresent() ? "%" + tableNamePattern + "%" : tableNamePattern;
     }
     
@@ -273,6 +307,7 @@ public abstract class ResultSetReturnedDatabaseMetaData extends WrapperAdapter i
         }
         String result = table;
         if (shardingRule.findTableRule(table).isPresent()) {
+            // 这里只要找到任意一个 物理表就可以
             DataNode dataNode = shardingRule.getDataNode(table);
             currentDataSourceName = dataNode.getDataSourceName();
             result = dataNode.getTableName();

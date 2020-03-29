@@ -44,6 +44,7 @@ import java.util.LinkedList;
 
 /**
  * SQL token generator builder for sharding.
+ * 产生token用的对象
  */
 @RequiredArgsConstructor
 public final class ShardingTokenGenerateBuilder implements SQLTokenGeneratorBuilder {
@@ -51,7 +52,11 @@ public final class ShardingTokenGenerateBuilder implements SQLTokenGeneratorBuil
     private final ShardingRule shardingRule;
     
     private final ShardingRouteContext shardingRouteContext;
-    
+
+    /**
+     * 获取一组token 生成器
+     * @return
+     */
     @Override
     public Collection<SQLTokenGenerator> getSQLTokenGenerators() {
         Collection<SQLTokenGenerator> result = buildSQLTokenGenerators();
@@ -65,7 +70,11 @@ public final class ShardingTokenGenerateBuilder implements SQLTokenGeneratorBuil
         }
         return result;
     }
-    
+
+    /**
+     * 一组token 生成器 负责加工 原有sql
+     * @return
+     */
     private Collection<SQLTokenGenerator> buildSQLTokenGenerators() {
         Collection<SQLTokenGenerator> result = new LinkedList<>();
         addSQLTokenGenerator(result, new TableTokenGenerator());

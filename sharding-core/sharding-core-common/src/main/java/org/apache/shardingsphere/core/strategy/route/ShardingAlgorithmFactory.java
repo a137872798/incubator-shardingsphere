@@ -25,6 +25,7 @@ import org.apache.shardingsphere.underlying.common.exception.ShardingSphereExcep
 
 /**
  * Sharding algorithm factory.
+ * 算法工厂
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class ShardingAlgorithmFactory {
@@ -32,7 +33,7 @@ public final class ShardingAlgorithmFactory {
     /**
      * Create sharding algorithm.
      * 
-     * @param shardingAlgorithmClassName sharding algorithm class name
+     * @param shardingAlgorithmClassName sharding algorithm class name  根据全限定名 反射创建对象
      * @param superShardingAlgorithmClass sharding algorithm super class
      * @param <T> class generic type
      * @return sharding algorithm instance

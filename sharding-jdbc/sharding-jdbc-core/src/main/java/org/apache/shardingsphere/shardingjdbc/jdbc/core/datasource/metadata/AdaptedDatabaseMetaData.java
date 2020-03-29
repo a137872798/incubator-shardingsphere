@@ -24,13 +24,16 @@ import java.util.Map;
 
 /**
  * Adapted database meta data.
+ * 该对象覆盖了一些元数据相关的方法
  */
 public abstract class AdaptedDatabaseMetaData extends ResultSetReturnedDatabaseMetaData {
     
     public AdaptedDatabaseMetaData(final Map<String, DataSource> dataSourceMap, final ShardingRule shardingRule) {
         super(dataSourceMap, shardingRule);
     }
-    
+
+    // 以下方法都被覆盖了
+
     @Override
     public final boolean ownInsertsAreVisible(final int type) {
         return true;

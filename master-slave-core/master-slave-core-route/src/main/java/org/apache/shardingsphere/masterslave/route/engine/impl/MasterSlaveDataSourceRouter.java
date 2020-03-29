@@ -27,27 +27,40 @@ import java.util.ArrayList;
 
 /**
  * Data source router for master-slave.
+ * 从主机 路由到某个从机上
  */
 @RequiredArgsConstructor
 public final class MasterSlaveDataSourceRouter {
-    
+
+    /**
+     * 包含了 主机的 dataSource  以及一组 从机的 dataSource
+     */
     private final MasterSlaveRule masterSlaveRule;
     
     /**
      * Route.
      * 
-     * @param sqlStatement SQL statement
+     * @param sqlStatement SQL statement  这里传入的是 会话对象
      * @return data source name
      */
     public String route(final SQLStatement sqlStatement) {
         if (isMasterRoute(sqlStatement)) {
+            // 将ThreadLocal 标记成true
             MasterVisitedManager.setMasterVisited();
+            // 返回主节点的 dataSourceName
             return masterSlaveRule.getMasterDataSourceName();
         }
+
+        // 从一组dataSource 中随机返回一个
         return masterSlaveRule.getLoadBalanceAlgorithm().getDataSource(
                 masterSlaveRule.getName(), masterSlaveRule.getMasterDataSourceName(), new ArrayList<>(masterSlaveRule.getSlaveDataSourceNames()));
     }
-    
+
+    /**
+     * 该会话对象是否会强制路由至 master节点
+     * @param sqlStatement
+     * @return
+     */
     private boolean isMasterRoute(final SQLStatement sqlStatement) {
         return containsLockSegment(sqlStatement) || !(sqlStatement instanceof SelectStatement) || MasterVisitedManager.isMasterVisited() || HintManager.isMasterRouteOnly();
     }

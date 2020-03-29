@@ -35,9 +35,17 @@ import java.util.List;
  *       for MyQL is COM_QUERY; 
  *       for PostgreSQL is Simple Query;
  * </pre>
+ *  该对象是分表的核心类
  */
 public final class SimpleQueryShardingEngine extends BaseShardingEngine {
-    
+
+    /**
+     * 初始化该对象时携带了 引擎对象
+     * @param shardingRule
+     * @param properties
+     * @param metaData
+     * @param sqlParserEngine
+     */
     public SimpleQueryShardingEngine(final ShardingRule shardingRule, final ShardingSphereProperties properties, final ShardingSphereMetaData metaData, final SQLParserEngine sqlParserEngine) {
         super(shardingRule, properties, metaData, sqlParserEngine);
     }
@@ -46,7 +54,13 @@ public final class SimpleQueryShardingEngine extends BaseShardingEngine {
     protected List<Object> cloneParameters(final List<Object> parameters) {
         return Collections.emptyList();
     }
-    
+
+    /**
+     * 通过路由器对象 解析sql 并将路由结果 包装成一个 RouteContext 对象
+     * @param sql
+     * @param parameters
+     * @return
+     */
     @Override
     protected ShardingRouteContext route(final String sql, final List<Object> parameters) {
         return getShardingRouter().route(sql, Collections.emptyList(), false);

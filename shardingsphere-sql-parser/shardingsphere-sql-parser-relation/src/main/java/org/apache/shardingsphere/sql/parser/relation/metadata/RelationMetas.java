@@ -25,10 +25,14 @@ import java.util.Map;
 
 /**
  * Relation metas.
+ * 一组关联元数据
  */
 @RequiredArgsConstructor
 public final class RelationMetas {
-    
+
+    /**
+     * key: tableName value: 元数据信息 (实际上是某个表的全列名)
+     */
     private final Map<String, RelationMetaData> relations;
     
     /**
@@ -47,6 +51,7 @@ public final class RelationMetas {
      * @param tableName table name
      * @param columnName column name
      * @return contains column or not
+     * 判断某个表是否有某个字段
      */
     public boolean containsColumn(final String tableName, final String columnName) {
         return relations.containsKey(tableName) && relations.get(tableName).getColumnNames().contains(columnName.toLowerCase());
@@ -57,6 +62,7 @@ public final class RelationMetas {
      *
      * @param tableName table name
      * @return column names
+     * 获取某个表下所有的列名
      */
     public List<String> getAllColumnNames(final String tableName) {
         return relations.containsKey(tableName) ? relations.get(tableName).getColumnNames() : Collections.<String>emptyList();

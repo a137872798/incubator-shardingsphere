@@ -36,10 +36,14 @@ import java.util.Map.Entry;
 
 /**
  * SQL execute prepare template.
+ * 做一些前置工作
  */
 @RequiredArgsConstructor
 public final class SQLExecutePrepareTemplate {
-    
+
+    /**
+     * 每条连接最大执行多少个sql
+     */
     private final int maxConnectionsSizePerQuery;
     
     /**
@@ -56,6 +60,7 @@ public final class SQLExecutePrepareTemplate {
     
     private Collection<InputGroup<StatementExecuteUnit>> getSynchronizedExecuteUnitGroups(
             final Collection<ExecutionUnit> executionUnits, final SQLExecutePrepareCallback callback) throws SQLException {
+        // 按照 dataSourceName 为执行单元分组
         Map<String, List<SQLUnit>> sqlUnitGroups = getSQLUnitGroups(executionUnits);
         Collection<InputGroup<StatementExecuteUnit>> result = new LinkedList<>();
         for (Entry<String, List<SQLUnit>> entry : sqlUnitGroups.entrySet()) {
@@ -63,7 +68,12 @@ public final class SQLExecutePrepareTemplate {
         }
         return result;
     }
-    
+
+    /**
+     * 为 执行单元分组
+     * @param executionUnits
+     * @return
+     */
     private Map<String, List<SQLUnit>> getSQLUnitGroups(final Collection<ExecutionUnit> executionUnits) {
         Map<String, List<SQLUnit>> result = new LinkedHashMap<>(executionUnits.size(), 1);
         for (ExecutionUnit each : executionUnits) {
@@ -74,16 +84,28 @@ public final class SQLExecutePrepareTemplate {
         }
         return result;
     }
-    
+
+    /**
+     * 为每个 sql 生成对应的会话对象 并包装成 statementExecuteUnit
+     * @param dataSourceName
+     * @param sqlUnits
+     * @param callback
+     * @return
+     * @throws SQLException
+     */
     private List<InputGroup<StatementExecuteUnit>> getSQLExecuteGroups(final String dataSourceName,
                                                                        final List<SQLUnit> sqlUnits, final SQLExecutePrepareCallback callback) throws SQLException {
         List<InputGroup<StatementExecuteUnit>> result = new LinkedList<>();
+        // 代表分成几个连接来执行
         int desiredPartitionSize = Math.max(0 == sqlUnits.size() % maxConnectionsSizePerQuery ? sqlUnits.size() / maxConnectionsSizePerQuery : sqlUnits.size() / maxConnectionsSizePerQuery + 1, 1);
+        // 每个子组使用一个 connection 然后 外部的List 代表针对该dataSource 的多个连接
         List<List<SQLUnit>> sqlUnitPartitions = Lists.partition(sqlUnits, desiredPartitionSize);
+        // < 代表要使用不止一条连接 那么 连接数就容易成为瓶颈 也就是 CONNECTION_STRICTLY
         ConnectionMode connectionMode = maxConnectionsSizePerQuery < sqlUnits.size() ? ConnectionMode.CONNECTION_STRICTLY : ConnectionMode.MEMORY_STRICTLY;
         List<Connection> connections = callback.getConnections(connectionMode, dataSourceName, sqlUnitPartitions.size());
         int count = 0;
         for (List<SQLUnit> each : sqlUnitPartitions) {
+            // 这里每组执行单元使用一条连接
             result.add(getSQLExecuteGroup(connectionMode, connections.get(count++), dataSourceName, each, callback));
         }
         return result;

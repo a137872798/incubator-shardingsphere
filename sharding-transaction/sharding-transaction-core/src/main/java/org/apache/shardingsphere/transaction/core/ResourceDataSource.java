@@ -23,6 +23,7 @@ import javax.sql.DataSource;
 
 /**
  * Unique resource data source.
+ * 每个数据源都有一个单进程下的全局id
  */
 @Getter
 public final class ResourceDataSource {

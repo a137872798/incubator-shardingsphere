@@ -19,6 +19,7 @@ package org.apache.shardingsphere.underlying.rewrite.sql;
 
 /**
  * SQL builder.
+ * 该对象用于生成sql
  */
 public interface SQLBuilder {
     

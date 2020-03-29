@@ -53,7 +53,10 @@ import java.util.Optional;
 public final class WhereClauseShardingConditionEngine {
     
     private final ShardingRule shardingRule;
-    
+
+    /**
+     * 该对象标注了 本次执行的sql使用了哪些表 以及它们的列
+     */
     private final RelationMetas relationMetas;
     
     /**
@@ -62,12 +65,14 @@ public final class WhereClauseShardingConditionEngine {
      * @param sqlStatementContext SQL statement context
      * @param parameters SQL parameters
      * @return sharding conditions
+     * 创建本次会影响代理逻辑的所有因素
      */
     public List<ShardingCondition> createShardingConditions(final SQLStatementContext sqlStatementContext, final List<Object> parameters) {
         if (!(sqlStatementContext instanceof WhereAvailable)) {
             return Collections.emptyList();
         }
         List<ShardingCondition> result = new ArrayList<>();
+        // 获取 "where" 相关的信息
         Optional<WhereSegment> whereSegment = ((WhereAvailable) sqlStatementContext).getWhere();
         if (whereSegment.isPresent()) {
             result.addAll(createShardingConditions(sqlStatementContext, whereSegment.get().getAndPredicates(), parameters));
@@ -82,27 +87,49 @@ public final class WhereClauseShardingConditionEngine {
 //        }
         return result;
     }
-    
+
+    /**
+     *
+     * @param sqlStatementContext  本次会话相关的信息
+     * @param andPredicates  一组谓语信息 对应 where xxx = xxx
+     * @param parameters  对应 where 传入的参数
+     * @return
+     */
     private Collection<ShardingCondition> createShardingConditions(final SQLStatementContext sqlStatementContext, final Collection<AndPredicate> andPredicates, final List<Object> parameters) {
         Collection<ShardingCondition> result = new LinkedList<>();
+        // where (a.id = 3 or a.id = 5) and (b.id = 3 or b.id = 5)  2个 and 条件
         for (AndPredicate each : andPredicates) {
+            // 代表针对某个列的多个限制条件  比如 where  (a.id = 3 or a.id = 5) 这里就是2个条件
             Map<Column, Collection<RouteValue>> routeValueMap = createRouteValueMap(sqlStatementContext, each, parameters);
             if (routeValueMap.isEmpty()) {
                 return Collections.emptyList();
             }
+            // 将某个子条件包装成 condition 并添加到列表中
             result.add(createShardingCondition(routeValueMap));
         }
         return result;
     }
-    
+
+    /**
+     *
+     * @param sqlStatementContext   本次会话信息
+     * @param andPredicate   and 信息
+     * @param parameters   使用的参数
+     * @return
+     */
     private Map<Column, Collection<RouteValue>> createRouteValueMap(final SQLStatementContext sqlStatementContext, final AndPredicate andPredicate, final List<Object> parameters) {
         Map<Column, Collection<RouteValue>> result = new HashMap<>();
+        // 代表每个 and 谓语内部还有多个 片段 比如 and (xxx or yyy)
         for (PredicateSegment each : andPredicate.getPredicates()) {
+            // 如果谓语对象设置了表名 那么直接获取表名 否则 通过谓语设置的列名 配合 relationMeta 找到对应的表名
             Optional<String> tableName = sqlStatementContext.getTablesContext().findTableName(each, relationMetas);
+            // 如果没有找到表名  或者该列 跟分表规则无关
             if (!tableName.isPresent() || !shardingRule.isShardingColumn(each.getColumn().getIdentifier().getValue(), tableName.get())) {
                 continue;
             }
+            // 根据列名 和表名 生成 column 对象
             Column column = new Column(each.getColumn().getIdentifier().getValue(), tableName.get());
+            // 该对象内部就是 xx字段必须是什么值
             Optional<RouteValue> routeValue = ConditionValueGeneratorFactory.generate(each.getRightValue(), column, parameters);
             if (!routeValue.isPresent()) {
                 continue;
@@ -114,11 +141,17 @@ public final class WhereClauseShardingConditionEngine {
         }
         return result;
     }
-    
+
+    /**
+     * 根据某组路由规则 生成condition 对象
+     * @param routeValueMap
+     * @return
+     */
     private ShardingCondition createShardingCondition(final Map<Column, Collection<RouteValue>> routeValueMap) {
         ShardingCondition result = new ShardingCondition();
         for (Entry<Column, Collection<RouteValue>> entry : routeValueMap.entrySet()) {
             try {
+                // 合并成单个 RouteValue
                 RouteValue routeValue = mergeRouteValues(entry.getKey(), entry.getValue());
                 if (routeValue instanceof AlwaysFalseRouteValue) {
                     return new AlwaysFalseShardingCondition();
@@ -130,17 +163,25 @@ public final class WhereClauseShardingConditionEngine {
         }
         return result;
     }
-    
+
+    /**
+     *
+     * @param column  某一列
+     * @param routeValues  该列需要满足的约束条件
+     * @return
+     */
     @SuppressWarnings("unchecked")
     private RouteValue mergeRouteValues(final Column column, final Collection<RouteValue> routeValues) {
         Collection<Comparable<?>> listValue = null;
         Range<Comparable<?>> rangeValue = null;
         for (RouteValue each : routeValues) {
+            // 整合所有 “=” “in” 条件
             if (each instanceof ListRouteValue) {
                 listValue = mergeListRouteValues(((ListRouteValue) each).getValues(), listValue);
                 if (listValue.isEmpty()) {
                     return new AlwaysFalseRouteValue();
                 }
+            // 整合所有范围条件
             } else if (each instanceof RangeRouteValue) {
                 try {
                     rangeValue = mergeRangeRouteValues(((RangeRouteValue) each).getValueRange(), rangeValue);
@@ -155,6 +196,7 @@ public final class WhereClauseShardingConditionEngine {
         if (null == rangeValue) {
             return new ListRouteValue<>(column.getName(), column.getTableName(), listValue);
         }
+        // 整合 2种类型的限制
         listValue = mergeListAndRangeRouteValues(listValue, rangeValue);
         return listValue.isEmpty() ? new AlwaysFalseRouteValue() : new ListRouteValue<>(column.getName(), column.getTableName(), listValue);
     }
@@ -168,9 +210,10 @@ public final class WhereClauseShardingConditionEngine {
     }
     
     private Range<Comparable<?>> mergeRangeRouteValues(final Range<Comparable<?>> value1, final Range<Comparable<?>> value2) {
-        return null == value2 ? value1 : value1.intersection(value2);
+        return null == value2 ? value1 : value1.intersection(value2);   // 计算交集
     }
-    
+
+    // 同时满足范围条件和  "=" 条件的
     private Collection<Comparable<?>> mergeListAndRangeRouteValues(final Collection<Comparable<?>> listValue, final Range<Comparable<?>> rangeValue) {
         Collection<Comparable<?>> result = new LinkedList<>();
         for (Comparable<?> each : listValue) {

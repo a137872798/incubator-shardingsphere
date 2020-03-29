@@ -25,18 +25,24 @@ import java.util.List;
 
 /**
  * Sharding conditions.
+ * 进行代理的 条件
  */
 @RequiredArgsConstructor
 @Getter
 @ToString
 public final class ShardingConditions {
-    
+
+    /**
+     * 这些条件会影响到代理sql的结果   对应 select/update/delete  就是 哪些涉及到分表的字段值必须是多少 或者必须满足啥条件
+     * 对应 insert 就是某列必须是什么值
+     */
     private final List<ShardingCondition> conditions;
     
     /**
      * Judge sharding conditions is always false or not.
      *
      * @return sharding conditions is always false or not
+     * 当内部 conditions 为空 或者全都是 AlwaysFalseShardingCondition 的子类
      */
     public boolean isAlwaysFalse() {
         if (conditions.isEmpty()) {

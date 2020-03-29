@@ -31,17 +31,27 @@ import java.util.Optional;
 
 /**
  * Simple table segment.
+ * 表相关的段信息   每个段都是AST 上的一个节点
  */
 @RequiredArgsConstructor
 @Getter
 @ToString
 public final class SimpleTableSegment implements TableSegment, OwnerAvailable, AliasAvailable {
-    
+
+    /**
+     * 该段携带的是 表名
+     */
     private final TableNameSegment tableName;
-    
+
+    /**
+     * 这个 owner 应该是指 这个表被哪个用户所持有吧
+     */
     @Setter
     private OwnerSegment owner;
-    
+
+    /**
+     * 该段内部包含的是别名信息
+     */
     @Setter
     private AliasSegment alias;
     

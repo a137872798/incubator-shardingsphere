@@ -36,22 +36,44 @@ import java.util.List;
 
 /**
  * SQL rewrite context.
+ * 改写sql的上下文
  */
 @Getter
 public final class SQLRewriteContext {
-    
+
+    /**
+     * 所有逻辑表下所有列
+     */
     private final RelationMetas relationMetas;
-    
+
+    /**
+     * 本次关联的 会话上下文
+     */
     private final SQLStatementContext sqlStatementContext;
-    
+
+    /**
+     * 原始sql
+     */
     private final String sql;
-    
+
+    /**
+     * 执行本次sql 使用的一组参数
+     */
     private final List<Object> parameters;
-    
+
+    /**
+     * token 在shardingSphere 中代表关键字  比如 in select delete 等 这里是详细信息 比如第几行第几列
+     */
     private final List<SQLToken> sqlTokens = new LinkedList<>();
-    
+
+    /**
+     * 参数构建器 使用原始参数进行初始化  可以调用api 对内部参数进行修改
+     */
     private final ParameterBuilder parameterBuilder;
-    
+
+    /**
+     * 该对象用于从 sql 中解析出token
+     */
     @Getter(AccessLevel.NONE)
     private final SQLTokenGenerators sqlTokenGenerators = new SQLTokenGenerators();
     
@@ -60,8 +82,11 @@ public final class SQLRewriteContext {
         this.sqlStatementContext = sqlStatementContext;
         this.sql = sql;
         this.parameters = parameters;
+        // 添加一组token 生成器
         addSQLTokenGenerators(new DefaultTokenGeneratorBuilder().getSQLTokenGenerators());
+        // 如果是插入语句 就获取 groupedParameters
         parameterBuilder = sqlStatementContext instanceof InsertStatementContext
+                // 多个子插入语句
                 ? new GroupedParameterBuilder(((InsertStatementContext) sqlStatementContext).getGroupedParameters()) : new StandardParameterBuilder(parameters);
     }
     
@@ -78,6 +103,7 @@ public final class SQLRewriteContext {
      * Generate SQL tokens.
      */
     public void generateSQLTokens() {
+        // 通过 token 生成器 将结果保存到容器中
         sqlTokens.addAll(sqlTokenGenerators.generateSQLTokens(sqlStatementContext, parameters, relationMetas));
     }
 }

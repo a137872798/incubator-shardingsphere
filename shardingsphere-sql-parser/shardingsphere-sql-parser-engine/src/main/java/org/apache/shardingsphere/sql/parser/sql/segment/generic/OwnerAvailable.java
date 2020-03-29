@@ -31,6 +31,7 @@ public interface OwnerAvailable extends SQLSegment {
      * Get owner.
      *
      * @return owner
+     * 获取所有者信息
      */
     Optional<OwnerSegment> getOwner();
     
@@ -38,6 +39,7 @@ public interface OwnerAvailable extends SQLSegment {
      * Set owner.
      *
      * @param owner owner
+     *              设置所有者
      */
     void setOwner(OwnerSegment owner);
 }

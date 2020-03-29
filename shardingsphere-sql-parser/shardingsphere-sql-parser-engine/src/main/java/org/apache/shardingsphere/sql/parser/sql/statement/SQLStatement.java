@@ -21,6 +21,7 @@ import org.apache.shardingsphere.sql.parser.sql.ASTNode;
 
 /**
  * SQL statement.
+ * 代表整个会话对象
  */
 public interface SQLStatement extends ASTNode {
     

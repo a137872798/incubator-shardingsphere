@@ -21,6 +21,7 @@ import java.util.Properties;
 
 /**
  * Base algorithm SPI.
+ * 基于SPI实现的类的 特征
  */
 public interface TypeBasedSPI {
     

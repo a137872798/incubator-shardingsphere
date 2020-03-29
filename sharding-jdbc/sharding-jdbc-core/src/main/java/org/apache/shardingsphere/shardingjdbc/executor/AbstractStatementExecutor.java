@@ -69,10 +69,14 @@ import java.util.stream.Collectors;
 
 /**
  * Abstract statement executor.
+ * 会话执行器
  */
 @Getter(AccessLevel.PROTECTED)
 public abstract class AbstractStatementExecutor {
-    
+
+    /**
+     * 该会话发往的数据库类型 (比如mysql)
+     */
     private final DatabaseType databaseType;
     
     @Getter
@@ -83,44 +87,82 @@ public abstract class AbstractStatementExecutor {
     
     @Getter
     private final int resultSetHoldability;
-    
+
+    /**
+     * 该连接对象内部实际维护了一组连接
+     */
     private final ShardingConnection connection;
-    
+
+    /**
+     * 该对象可以为sql 分组 (一定数量的sql 由一个connection 来处理)
+     */
     private final SQLExecutePrepareTemplate sqlExecutePrepareTemplate;
-    
+
+    /**
+     * 使用 ExecutorEngine 来执行statement 并行的方式提高效率
+     */
     private final SQLExecuteTemplate sqlExecuteTemplate;
     
     private final Collection<Connection> connections = new LinkedList<>();
-    
+
+    /**
+     * 本次执行会话相关的上下文  即使分表 它们执行的语句类型是一致的
+     */
     @Getter
     @Setter
     private SQLStatementContext sqlStatementContext;
     
     @Getter
     private final List<List<Object>> parameterSets = new LinkedList<>();
-    
+
+    /**
+     * 执行某次sql 发生分表并生成的多个会话
+     */
     @Getter
     private final List<Statement> statements = new LinkedList<>();
-    
+
+    /**
+     * 执行后的结果集
+     */
     @Getter
     private final List<ResultSet> resultSets = new CopyOnWriteArrayList<>();
-    
+
+    /**
+     * 内部每个对象都代表一组会话 并且使用同一个连接
+     */
     private final Collection<InputGroup<StatementExecuteUnit>> inputGroups = new LinkedList<>();
-    
+
+    /**
+     * 通过 Connection 创建 statement 或者 prepareStatement 时  就会生成一个对应的 执行器对象
+     * @param resultSetType
+     * @param resultSetConcurrency
+     * @param resultSetHoldability
+     * @param shardingConnection
+     */
     public AbstractStatementExecutor(final int resultSetType, final int resultSetConcurrency, final int resultSetHoldability, final ShardingConnection shardingConnection) {
         this.databaseType = shardingConnection.getRuntimeContext().getDatabaseType();
         this.resultSetType = resultSetType;
         this.resultSetConcurrency = resultSetConcurrency;
         this.resultSetHoldability = resultSetHoldability;
         this.connection = shardingConnection;
+        // 尽可能通过多个connection 来提高性能  那么netty的连接池很可能也是这个思路 在达到一定的连接数前
+        // 那么连接数肯定是越多越好
         int maxConnectionsSizePerQuery = connection.getRuntimeContext().getProperties().<Integer>getValue(PropertiesConstant.MAX_CONNECTIONS_SIZE_PER_QUERY);
+        // 执行引擎 就是线程池
         ExecutorEngine executorEngine = connection.getRuntimeContext().getExecutorEngine();
+        // 预备模板
         sqlExecutePrepareTemplate = new SQLExecutePrepareTemplate(maxConnectionsSizePerQuery);
+        // 执行模板
         sqlExecuteTemplate = new SQLExecuteTemplate(executorEngine, connection.isHoldTransaction());
     }
-    
+
+    /**
+     * 缓存会话对象
+     */
     protected final void cacheStatements() {
+        // InputGroup 中每个元素 又是一个List 代表每个连接要处理的sql
         for (InputGroup<StatementExecuteUnit> each : inputGroups) {
+            // 获取会话对象并保存
             statements.addAll(each.getInputs().stream().map(StatementExecuteUnit::getStatement).collect(Collectors.toList()));
             parameterSets.addAll(each.getInputs().stream().map(input -> input.getExecutionUnit().getSqlUnit().getParameters()).collect(Collectors.toList()));
         }
@@ -136,6 +178,7 @@ public abstract class AbstractStatementExecutor {
      * @param <T> class type of return value 
      * @return result
      * @throws SQLException SQL exception
+     * 使用指定回调处理会话 并生成结果集
      */
     @SuppressWarnings("unchecked")
     protected final <T> List<T> executeCallback(final SQLExecuteCallback<T> executeCallback) throws SQLException {
@@ -146,7 +189,7 @@ public abstract class AbstractStatementExecutor {
     
     /**
      * is accumulate.
-     * 
+     * 非广播模式下就是 累加
      * @return accumulate or not
      */
     public final boolean isAccumulate() {
@@ -155,7 +198,7 @@ public abstract class AbstractStatementExecutor {
     
     /**
      * Clear data.
-     *
+     * 每当使用statement 执行一个新的语句就会清除内部残留的数据
      * @throws SQLException SQL exception
      */
     public void clear() throws SQLException {
@@ -166,13 +209,23 @@ public abstract class AbstractStatementExecutor {
         resultSets.clear();
         inputGroups.clear();
     }
-    
+
+    /**
+     * 每次执行一个新的sql 前都要将之前开启的多个会话关闭  因为执行sql时触发了分表 所以生成了多个 statement
+     * @throws SQLException
+     */
     private void clearStatements() throws SQLException {
         for (Statement each : getStatements()) {
             each.close();
         }
     }
-    
+
+    /**
+     * 判断是否需要更新元数据  当执行的会话是修改表相关的那么就需要重新拉取该表的元数据信息了
+     * @param runtimeContext
+     * @param sqlStatementContext
+     * @throws SQLException
+     */
     private void refreshMetaDataIfNeeded(final ShardingRuntimeContext runtimeContext, final SQLStatementContext sqlStatementContext) throws SQLException {
         if (null == sqlStatementContext) {
             return;

@@ -22,6 +22,7 @@ import java.sql.SQLException;
 
 /**
  * Connection manager.
+ * 连接管理器 可以通过数据源名称 获取其 jdbc连接
  */
 public interface ConnectionManager {
     

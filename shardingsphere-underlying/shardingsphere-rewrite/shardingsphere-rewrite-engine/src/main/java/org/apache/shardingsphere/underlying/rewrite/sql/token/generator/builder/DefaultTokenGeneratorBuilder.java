@@ -25,6 +25,7 @@ import java.util.LinkedList;
 
 /**
  * Default SQL token generator builder.
+ * 默认的token 生成器对象
  */
 public final class DefaultTokenGeneratorBuilder implements SQLTokenGeneratorBuilder {
     

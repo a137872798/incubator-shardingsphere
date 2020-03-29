@@ -25,6 +25,7 @@ import java.lang.reflect.Method;
 
 /**
  * Invocation that reflected call for JDBC method.
+ * 记录某次调用的方法 以及使用的参数
  */
 @RequiredArgsConstructor
 public class JdbcMethodInvocation {

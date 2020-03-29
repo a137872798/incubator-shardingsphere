@@ -22,11 +22,22 @@ import org.apache.shardingsphere.api.sharding.standard.PreciseShardingValue;
 
 import java.util.Collection;
 
+/**
+ * 分表规则
+ */
 public final class PreciseModuloDatabaseShardingAlgorithm implements PreciseShardingAlgorithm<Integer> {
-    
+
+    /**
+     * 代表等于某个具体的integer值时选择的物理表
+     *
+     * @param availableTargetNames available data sources or tables's names
+     * @param shardingValue        sharding value
+     * @return
+     */
     @Override
     public String doSharding(final Collection<String> availableTargetNames, final PreciseShardingValue<Integer> shardingValue) {
         for (String each : availableTargetNames) {
+            // 这不是只能在 0,1 表中选吗???
             if (each.endsWith(shardingValue.getValue() % 2 + "")) {
                 return each;
             }

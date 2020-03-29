@@ -23,14 +23,16 @@ import java.util.Collection;
 
 /**
  * Parameter rewriter builder.
+ * 改写参数构建器
  */
 public interface ParameterRewriterBuilder {
     
     /**
      * Get parameter rewriters.
      * 
-     * @param relationMetas relation metas
+     * @param relationMetas relation metas   传入一组关联表信息
      * @return parameter rewriters
+     * 返回 参数改写对象
      */
     Collection<ParameterRewriter> getParameterRewriters(RelationMetas relationMetas);
 }

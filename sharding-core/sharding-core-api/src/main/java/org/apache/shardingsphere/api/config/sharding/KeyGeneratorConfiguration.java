@@ -26,10 +26,11 @@ import java.util.Properties;
 
 /**
  * Key generator configuration.
+ * 全局唯一id生成器  因为分表了 所以不能使用数据层自增主键
 */
 @Getter
 public final class KeyGeneratorConfiguration extends TypeBasedSPIConfiguration {
-    
+
     private final String column;
     
     public KeyGeneratorConfiguration(final String type, final String column) {

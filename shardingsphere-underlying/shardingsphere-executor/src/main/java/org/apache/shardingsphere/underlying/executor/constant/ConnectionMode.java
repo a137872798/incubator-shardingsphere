@@ -19,6 +19,7 @@ package org.apache.shardingsphere.underlying.executor.constant;
 
 /**
  * Connection Mode.
+ * 2种连接模式 一种是 内存限制 一种是连接数限制
  */
 public enum ConnectionMode {
     

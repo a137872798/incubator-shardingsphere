@@ -39,6 +39,7 @@ import java.util.Set;
 
 /**
  * Database meta data result set.
+ * 结果集对象的适配层
  */
 public final class DatabaseMetaDataResultSet extends AbstractUnsupportedDatabaseMetaDataResultSet {
     
@@ -47,30 +48,51 @@ public final class DatabaseMetaDataResultSet extends AbstractUnsupportedDatabase
     private static final String INDEX_NAME = "INDEX_NAME";
     
     private final int type;
-    
+
+    /**
+     * 当前并行度
+     */
     private final int concurrency;
     
     private final ShardingRule shardingRule;
-    
+
+    /**
+     * 原生resultSet 元数据
+     */
     private final ResultSetMetaData resultSetMetaData;
-    
+
+    /**
+     * key 某一列名     value 属于第几列
+     */
     private final Map<String, Integer> columnLabelIndexMap;
-    
+
+    /**
+     * 每个DatabaseMetaDataObject  就是一组 List<Object>  用于存储某次获取到的所有结果信息(行)
+     */
     private final Iterator<DatabaseMetaDataObject> databaseMetaDataObjectIterator;
-    
+
+    /**
+     * 当前结果集是否已经被关闭
+     */
     private volatile boolean closed;
     
     private DatabaseMetaDataObject currentDatabaseMetaDataObject;
     
     public DatabaseMetaDataResultSet(final ResultSet resultSet, final ShardingRule shardingRule) throws SQLException {
         this.type = resultSet.getType();
+        // 代表本次结果集是由多少statement 生成的
         this.concurrency = resultSet.getConcurrency();
         this.shardingRule = shardingRule;
         this.resultSetMetaData = resultSet.getMetaData();
         this.columnLabelIndexMap = initIndexMap();
         this.databaseMetaDataObjectIterator = initIterator(resultSet);
     }
-    
+
+    /**
+     * 读取 每一行数据的 列名 以及对应的下标
+     * @return
+     * @throws SQLException
+     */
     private Map<String, Integer> initIndexMap() throws SQLException {
         Map<String, Integer> result = new HashMap<>(resultSetMetaData.getColumnCount());
         for (int i = 1; i <= resultSetMetaData.getColumnCount(); i++) {
@@ -78,14 +100,24 @@ public final class DatabaseMetaDataResultSet extends AbstractUnsupportedDatabase
         }
         return result;
     }
-    
+
+    /**
+     * 返回的结果集 自动做了 去重
+     * @param resultSet
+     * @return
+     * @throws SQLException
+     */
     private Iterator<DatabaseMetaDataObject> initIterator(final ResultSet resultSet) throws SQLException {
         LinkedList<DatabaseMetaDataObject> result = new LinkedList<>();
         Set<DatabaseMetaDataObject> removeDuplicationSet = new HashSet<>();
+
+        //  TABLE_NAME INDEX_NAME 被作为列的固有属性可以在 resultSet 中获取
         int tableNameColumnIndex = columnLabelIndexMap.getOrDefault(TABLE_NAME, -1);
         int indexNameColumnIndex = columnLabelIndexMap.getOrDefault(INDEX_NAME, -1);
         while (resultSet.next()) {
+            // 每次获取到的是 一行记录信息
             DatabaseMetaDataObject databaseMetaDataObject = generateDatabaseMetaDataObject(tableNameColumnIndex, indexNameColumnIndex, resultSet);
+            // 自动去重
             if (!removeDuplicationSet.contains(databaseMetaDataObject)) {
                 result.add(databaseMetaDataObject);
                 removeDuplicationSet.add(databaseMetaDataObject);
@@ -93,7 +125,15 @@ public final class DatabaseMetaDataResultSet extends AbstractUnsupportedDatabase
         }
         return result.iterator();
     }
-    
+
+    /**
+     * 表名对应到第几列 还有索引名称对应第几列
+     * @param tableNameColumnIndex
+     * @param indexNameColumnIndex
+     * @param resultSet
+     * @return
+     * @throws SQLException
+     */
     private DatabaseMetaDataObject generateDatabaseMetaDataObject(final int tableNameColumnIndex, final int indexNameColumnIndex, final ResultSet resultSet) throws SQLException {
         DatabaseMetaDataObject result = new DatabaseMetaDataObject(resultSetMetaData.getColumnCount());
         for (int i = 1; i <= columnLabelIndexMap.size(); i++) {
@@ -111,17 +151,28 @@ public final class DatabaseMetaDataResultSet extends AbstractUnsupportedDatabase
         }
         return result;
     }
-    
+
+    /**
+     * 当获取下行记录时  实际上数据已经提前加载到内存了(并且做了去重)
+     * TODO 那么 resultSet 本身是从外部将数据读取到内存呢(类似SPI的惰性加载) 还是一次性全部已经加载到内存了???
+     * @return
+     * @throws SQLException
+     */
     @Override
     public boolean next() throws SQLException {
         checkClosed();
         if (databaseMetaDataObjectIterator.hasNext()) {
+            // 每次获取结果的时候 记录当前数据 便于快捷获取某列信息
             currentDatabaseMetaDataObject = databaseMetaDataObjectIterator.next();
             return true;
         }
         return false;
     }
-    
+
+    /**
+     * 这里通过设置标识的方式 达到逻辑关闭 那么什么时候进行物理关闭呢
+     * @throws SQLException
+     */
     @Override
     public void close() throws SQLException {
         checkClosed();
@@ -138,6 +189,7 @@ public final class DatabaseMetaDataResultSet extends AbstractUnsupportedDatabase
     public String getString(final int columnIndex) throws SQLException {
         checkClosed();
         checkColumnIndex(columnIndex);
+        // 获取当前读取到的 行记录的某一字段
         return (String) ResultSetUtil.convertValue(currentDatabaseMetaDataObject.getObject(columnIndex), String.class);
     }
     
@@ -327,13 +379,21 @@ public final class DatabaseMetaDataResultSet extends AbstractUnsupportedDatabase
             throw new SQLException("ResultSet has closed.");
         }
     }
-    
+
+    /**
+     * 确保尝试获取某一列的下标没有超过当初读取元数据的范围
+     * @param columnIndex
+     * @throws SQLException
+     */
     private void checkColumnIndex(final int columnIndex) throws SQLException {
         if (columnIndex < 1 || columnIndex > resultSetMetaData.getColumnCount()) {
             throw new SQLException(String.format("ColumnIndex %d out of range from %d to %d", columnIndex, 1, resultSetMetaData.getColumnCount()));
         }
     }
-    
+
+    /**
+     * 当整行记录相同时 判定 equals 为 true
+     */
     @EqualsAndHashCode
     private final class DatabaseMetaDataObject {
         

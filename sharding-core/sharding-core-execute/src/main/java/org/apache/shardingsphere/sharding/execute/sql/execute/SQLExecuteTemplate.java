@@ -30,19 +30,26 @@ import java.util.List;
 
 /**
  * SQL execute template.
+ * 执行sql 的模板对象
  */
 @RequiredArgsConstructor
 public final class SQLExecuteTemplate {
-    
+
+    /**
+     * 可以简单的理解为线程池
+     */
     private final ExecutorEngine executorEngine;
-    
+
+    /**
+     * 是否串行执行  (也就是在一个线程中循环执行)   如果当前在一个事务中就不能并发执行了
+     */
     private final boolean serial;
     
     /**
      * Execute.
      *
-     * @param inputGroups input groups
-     * @param callback SQL execute callback
+     * @param inputGroups input groups  包含一组会话执行最小单元
+     * @param callback SQL execute callback  回调中包含了处理statement的逻辑
      * @param <T> class type of return value
      * @return execute result
      * @throws SQLException SQL exception

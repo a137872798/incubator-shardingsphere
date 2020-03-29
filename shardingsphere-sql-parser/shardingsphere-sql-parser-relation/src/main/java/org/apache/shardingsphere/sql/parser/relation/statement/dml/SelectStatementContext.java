@@ -62,13 +62,19 @@ import java.util.Optional;
 
 /**
  * Select SQL statement context.
+ * 执行查询语句时的上下文信息
  */
 @Getter
 @ToString(callSuper = true)
 public final class SelectStatementContext extends CommonSQLStatementContext<SelectStatement> implements TableAvailable, WhereAvailable {
-    
+
+    /**
+     * 本次查询涉及到的所有表的信息  一次sql 查询可能会有关联表啥的 所以就保存了每个表相关的信息
+     */
     private final TablesContext tablesContext;
-    
+
+    // 对应一条 select 语句中各个token
+
     private final ProjectionsContext projectionsContext;
     
     private final GroupByContext groupByContext;
@@ -90,14 +96,25 @@ public final class SelectStatementContext extends CommonSQLStatementContext<Sele
         this.paginationContext = paginationContext;
         containsSubquery = containsSubquery();
     }
-    
+
+    /**
+     *
+     * @param relationMetas  代表所有表 以及下面所有的列信息
+     * @param sql 本次执行的sql
+     * @param parameters  使用的参数
+     * @param sqlStatement  ast语法树对应的会话
+     */
     public SelectStatementContext(final RelationMetas relationMetas, final String sql, final List<Object> parameters, final SelectStatement sqlStatement) {
         super(sqlStatement);
+        // 本次涉及到的所有逻辑表
         tablesContext = new TablesContext(sqlStatement.getTables());
+        // 从语法树中 获取 groupBy 和 orderBy 的相关信息  下面的方法就是将语句中的token抽取出来变成context
         groupByContext = new GroupByContextEngine().createGroupByContext(sqlStatement);
         orderByContext = new OrderByContextEngine().createOrderBy(sqlStatement, groupByContext);
         projectionsContext = new ProjectionsContextEngine(relationMetas).createProjectionsContext(sql, sqlStatement, groupByContext, orderByContext);
+        // 获取分页信息
         paginationContext = new PaginationContextEngine().createPaginationContext(sqlStatement, projectionsContext, parameters);
+        // 判断是否包含子查询
         containsSubquery = containsSubquery();
     }
     

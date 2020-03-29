@@ -25,13 +25,16 @@ import java.util.Optional;
 
 /**
  * Datasource properties setter holder.
+ * 该对象缓存了  可set的属性
  */
 public final class DataSourcePropertiesSetterHolder {
     
     private static final Map<String, DataSourcePropertiesSetter> DATA_SOURCE_PROPERTIES_SETTER_MAP = new HashMap<>();
     
     static {
+        // 这里将所有 该接口实现类 添加到 shardingSphere 的 spi工厂中
         NewInstanceServiceLoader.register(DataSourcePropertiesSetter.class);
+        // 将实现类都加入到缓存中
         for (DataSourcePropertiesSetter each : NewInstanceServiceLoader.newServiceInstances(DataSourcePropertiesSetter.class)) {
             DATA_SOURCE_PROPERTIES_SETTER_MAP.put(each.getType(), each);
         }

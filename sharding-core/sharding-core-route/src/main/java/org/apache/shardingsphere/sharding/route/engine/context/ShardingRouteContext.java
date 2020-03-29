@@ -28,14 +28,22 @@ import java.util.Optional;
 
 /**
  * SQL route context.
+ * 路由上下文
  */
 @Getter
 public final class ShardingRouteContext extends RouteContext {
-    
+
     private final ShardingConditions shardingConditions;
     
     private final GeneratedKey generatedKey;
-    
+
+    /**
+     * 初始化的时候可以传入 本次会话上下文 以及路由结果
+     * @param sqlStatementContext
+     * @param routeResult
+     * @param shardingConditions
+     * @param generatedKey
+     */
     public ShardingRouteContext(final SQLStatementContext sqlStatementContext, final RouteResult routeResult, final ShardingConditions shardingConditions, final GeneratedKey generatedKey) {
         super(sqlStatementContext, routeResult);
         this.shardingConditions = shardingConditions;

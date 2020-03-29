@@ -36,15 +36,20 @@ import java.util.Set;
 
 /**
  * Sharding unicast routing engine.
+ * 单播对象 每个逻辑表只会对应一个物理表 也就是一种情况 否则一般会出现笛卡尔积
  */
 @RequiredArgsConstructor
 public final class ShardingUnicastRoutingEngine implements ShardingRouteEngine {
-    
+
+    /**
+     * 本次涉及到的所有逻辑表
+     */
     private final Collection<String> logicTables;
     
     @Override
     public RouteResult route(final ShardingRule shardingRule) {
         RouteResult result = new RouteResult();
+        // TODO 广播表先不看
         if (shardingRule.isAllBroadcastTables(logicTables)) {
             List<TableUnit> tableUnits = new ArrayList<>(logicTables.size());
             for (String each : logicTables) {
@@ -55,6 +60,7 @@ public final class ShardingUnicastRoutingEngine implements ShardingRouteEngine {
             result.getRouteUnits().add(routeUnit);
         } else if (logicTables.isEmpty()) {
             result.getRouteUnits().add(new RouteUnit(shardingRule.getShardingDataSourceNames().getRandomDataSourceName()));
+        // 因为生成该对象的条件是 dml语句中没有shardingColumn 所以会随机使用一个 物理节点(dataNode)
         } else if (1 == logicTables.size()) {
             String logicTableName = logicTables.iterator().next();
             if (!shardingRule.findTableRule(logicTableName).isPresent()) {
@@ -71,9 +77,12 @@ public final class ShardingUnicastRoutingEngine implements ShardingRouteEngine {
             boolean first = true;
             for (String each : logicTables) {
                 TableRule tableRule = shardingRule.getTableRule(each);
+                // 比如 11 12 21 22   另一个是    22 23 32 33  那么数据源只可能是2
+                // 这里相当于 始终选择第一个物理表  那么本次结果对应的2个物理表 分别是  21 22
                 DataNode dataNode = tableRule.getActualDataNodes().get(0);
                 tableUnits.add(new TableUnit(each, dataNode.getTableName()));
                 Set<String> currentDataSourceNames = new HashSet<>(tableRule.getActualDatasourceNames().size());
+                // 将本逻辑表对应的所有数据源都添加进去
                 for (DataNode eachDataNode : tableRule.getActualDataNodes()) {
                     currentDataSourceNames.add(eachDataNode.getDataSourceName());
                 }
@@ -81,12 +90,14 @@ public final class ShardingUnicastRoutingEngine implements ShardingRouteEngine {
                     availableDatasourceNames = currentDataSourceNames;
                     first = false;
                 } else {
+                    // 确保使用的数据源包含了所有表的信息
                     availableDatasourceNames = Sets.intersection(availableDatasourceNames, currentDataSourceNames);
                 }
             }
             if (availableDatasourceNames.isEmpty()) {
                 throw new ShardingSphereConfigurationException("Cannot find actual datasource intersection for logic tables: %s", logicTables);
             }
+            // 从所有满足条件的数据源中再随机选择一个
             RouteUnit routeUnit = new RouteUnit(shardingRule.getShardingDataSourceNames().getRandomDataSourceName(availableDatasourceNames));
             routeUnit.getTableUnits().addAll(tableUnits);
             result.getRouteUnits().add(routeUnit);

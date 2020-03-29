@@ -27,7 +27,9 @@ import org.apache.shardingsphere.underlying.common.yaml.config.YamlConfiguration
 @Getter
 @Setter
 public final class YamlProxyUserConfiguration implements YamlConfiguration {
-    
+
+    // 每个 proxyUser 包含密码 和认证的协议
+
     private String password;
     
     private String authorizedSchemas;

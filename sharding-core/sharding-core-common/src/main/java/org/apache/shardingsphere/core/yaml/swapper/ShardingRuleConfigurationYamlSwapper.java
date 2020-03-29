@@ -32,6 +32,7 @@ import java.util.Map.Entry;
 
 /**
  * Sharding rule configuration YAML swapper.
+ * 大概就是做适配吧 不细看了
  */
 public final class ShardingRuleConfigurationYamlSwapper implements YamlSwapper<YamlShardingRuleConfiguration, ShardingRuleConfiguration> {
     

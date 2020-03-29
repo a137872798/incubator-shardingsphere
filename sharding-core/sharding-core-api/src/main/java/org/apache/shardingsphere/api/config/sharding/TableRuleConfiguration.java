@@ -25,15 +25,23 @@ import org.apache.shardingsphere.api.config.sharding.strategy.ShardingStrategyCo
 
 /**
  * Table rule configuration.
+ * 表规则
  */
 @Getter
 @Setter
 public final class TableRuleConfiguration {
-    
+
+    /**
+     * 逻辑表
+     */
     private final String logicTable;
-    
+
+    /**
+     * dataNode 对应一个物理表以及dataSource信息 而该字符串是由多个dataNode信息组合起来的
+     */
     private final String actualDataNodes;
-    
+
+    // 基于 table/datasource 的分表策略
     private ShardingStrategyConfiguration databaseShardingStrategyConfig;
     
     private ShardingStrategyConfiguration tableShardingStrategyConfig;

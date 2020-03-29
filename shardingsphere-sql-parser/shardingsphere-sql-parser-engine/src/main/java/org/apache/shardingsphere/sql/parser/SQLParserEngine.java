@@ -31,12 +31,20 @@ import java.util.Optional;
 
 /**
  * SQL parser engine.
+ * 解析sql 的引擎对象   具体的解析逻辑委托给了第三方的框架
  */
 @RequiredArgsConstructor
 public final class SQLParserEngine {
-    
+
+    /**
+     * 本次 dataSource 类型 比如 mysql
+     */
     private final String databaseTypeName;
-    
+
+    /**
+     * 保存解析结果的缓存对象
+     * TODO 因为解析本身是一个非常耗时的工作 那么如果执行的sql过多 不是会对内存造成压力吗 还是说只涉及到分表的sql才会需要解析???
+     */
     private final SQLParseResultCache cache = new SQLParseResultCache();
     
     /**
@@ -47,9 +55,11 @@ public final class SQLParserEngine {
      * @return SQL statement
      */
     public SQLStatement parse(final String sql, final boolean useCache) {
+        // 统一管理所有钩子
         ParsingHook parsingHook = new SPIParsingHook();
         parsingHook.start(sql);
         try {
+            // 解析sql 并生成会话对象
             SQLStatement result = parse0(sql, useCache);
             parsingHook.finishSuccess(result);
             return result;
@@ -62,13 +72,17 @@ public final class SQLParserEngine {
     }
     
     private SQLStatement parse0(final String sql, final boolean useCache) {
+        // 首先尝试从缓存获取
         if (useCache) {
             Optional<SQLStatement> cachedSQLStatement = cache.getSQLStatement(sql);
             if (cachedSQLStatement.isPresent()) {
                 return cachedSQLStatement.get();
             }
         }
+        // 生成一个树形对象 
         ParseTree parseTree = new SQLParserExecutor(databaseTypeName, sql).execute();
+        // visitor 会检测生成的语法树节点是否满足观察条件 如果满足的话则会触发visitor的逻辑
+        // 这里将信息抽取出来生成了 会话对象
         SQLStatement result = (SQLStatement) ParseTreeVisitorFactory.newInstance(databaseTypeName, RuleName.valueOf(parseTree.getClass())).visit(parseTree);
         if (useCache) {
             cache.put(sql, result);

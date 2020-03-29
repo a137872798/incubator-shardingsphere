@@ -52,13 +52,19 @@ public final class DataSourceUtil {
      * @throws ReflectiveOperationException reflective operation exception
      */
     public static DataSource getDataSource(final String dataSourceClassName, final Map<String, Object> dataSourceProperties) throws ReflectiveOperationException {
+        // 反射创建原生的 dataSource 对象  反射填充属性
         DataSource result = (DataSource) Class.forName(dataSourceClassName).newInstance();
         for (Entry<String, Object> entry : dataSourceProperties.entrySet()) {
             callSetterMethod(result, getSetterMethodName(entry.getKey()), null == entry.getValue() ? null : entry.getValue().toString());
         }
         return result;
     }
-    
+
+    /**
+     * 生成 setXXX 名
+     * @param propertyName
+     * @return
+     */
     private static String getSetterMethodName(final String propertyName) {
         if (propertyName.contains("-")) {
             return CaseFormat.LOWER_HYPHEN.to(CaseFormat.LOWER_CAMEL, SET_METHOD_PREFIX + "-" + propertyName);

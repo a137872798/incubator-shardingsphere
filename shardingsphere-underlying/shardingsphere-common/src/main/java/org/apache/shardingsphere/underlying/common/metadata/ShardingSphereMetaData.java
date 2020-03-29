@@ -29,25 +29,38 @@ import java.util.Map;
 
 /**
  * ShardingSphere meta data.
+ * 主要的元数据信息
  */
 @Getter
 public final class ShardingSphereMetaData {
-    
+
+    /**
+     * 数据源元数据
+     */
     private final DataSourceMetas dataSources;
-    
+
+    /**
+     * 涉及到的表的元数据
+     */
     private final TableMetas tables;
-    
+
+    /**
+     * 关联关系的元数据
+     */
     private final RelationMetas relationMetas;
     
     public ShardingSphereMetaData(final DataSourceMetas dataSources, final TableMetas tables) {
         this.dataSources = dataSources;
         this.tables = tables;
+        // 初始化关联信息
         relationMetas = createRelationMetas();
     }
     
     private RelationMetas createRelationMetas() {
+        // 获取所有表名 如果设置了 defaultDataSource 那么会将该数据源下所有表的元数据都拉取下来同时key 是物理表
         Map<String, RelationMetaData> result = new HashMap<>(tables.getAllTableNames().size());
         for (String each : tables.getAllTableNames()) {
+            // 获取对应的表元数据
             TableMetaData tableMetaData = tables.get(each);
             result.put(each, new RelationMetaData(tableMetaData.getColumns().keySet()));
         }

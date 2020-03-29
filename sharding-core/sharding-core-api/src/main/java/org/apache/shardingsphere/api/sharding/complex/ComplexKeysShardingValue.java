@@ -28,15 +28,21 @@ import java.util.Map;
 
 /**
  * Sharding value for complex keys.
+ * 通过多列来决定代理的结果
  */
 @RequiredArgsConstructor
 @Getter
 @ToString
 public final class ComplexKeysShardingValue<T extends Comparable<?>> implements ShardingValue {
-    
+
+    /**
+     * 逻辑表名 应该就是还未进行代理前的要查询的表名
+     */
     private final String logicTableName;
-    
+
+    // 下面2个容器 代表列名 以及该列的范围 比如 a = 3 , a in (4,5) , a between 6 and 7
+
     private final Map<String, Collection<T>> columnNameAndShardingValuesMap;
-    
+
     private final Map<String, Range<T>> columnNameAndRangeValuesMap;
 }

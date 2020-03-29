@@ -25,16 +25,26 @@ import java.util.List;
 
 /**
  * Master-slave rule configuration.
+ * 主从机规则配置
  */
 @Getter
 public class MasterSlaveRuleConfiguration implements RuleConfiguration {
     
     private final String name;
-    
+
+    /**
+     * 数据源名称
+     */
     private final String masterDataSourceName;
-    
+
+    /**
+     * 从机列表
+     */
     private final List<String> slaveDataSourceNames;
-    
+
+    /**
+     * 采用的均衡负载策略
+     */
     private final LoadBalanceStrategyConfiguration loadBalanceStrategyConfiguration;
     
     public MasterSlaveRuleConfiguration(final String name, final String masterDataSourceName, final List<String> slaveDataSourceNames) {

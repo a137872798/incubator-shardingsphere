@@ -27,6 +27,7 @@ import java.util.regex.Pattern;
 
 /**
  * Data source meta data for MySQL.
+ * 从连接url 上解析出元数据
  */
 @Getter
 public final class MySQLDataSourceMetaData implements DataSourceMetaData {

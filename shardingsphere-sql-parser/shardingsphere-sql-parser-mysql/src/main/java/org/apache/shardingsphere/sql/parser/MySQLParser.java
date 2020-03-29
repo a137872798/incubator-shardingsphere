@@ -23,6 +23,7 @@ import org.apache.shardingsphere.sql.parser.api.parser.SQLParser;
 
 /**
  * SQL parser for MySQL.
+ *
  */
 public final class MySQLParser extends MySQLStatementParser implements SQLParser {
     

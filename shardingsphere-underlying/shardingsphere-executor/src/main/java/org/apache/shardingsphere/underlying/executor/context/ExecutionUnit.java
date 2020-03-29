@@ -24,6 +24,7 @@ import lombok.ToString;
 
 /**
  * Execution unit.
+ * 代表执行的最小单元
  */
 @RequiredArgsConstructor
 @Getter

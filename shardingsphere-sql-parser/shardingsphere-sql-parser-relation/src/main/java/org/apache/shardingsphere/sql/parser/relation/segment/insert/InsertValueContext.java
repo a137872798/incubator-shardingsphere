@@ -30,13 +30,20 @@ import java.util.List;
 
 /**
  * Insert value context.
+ * 如果是 批量插入 那么对应一个子句
  */
 @Getter
 @ToString
 public final class InsertValueContext {
-    
+
+    /**
+     * 本次插入的参数数量
+     */
     private final int parametersCount;
-    
+
+    /**
+     * 插入的值 在 ASTNode 中被看作是一个 expression
+     */
     private final List<ExpressionSegment> valueExpressions;
     
     private final List<Object> parameters;
@@ -50,6 +57,7 @@ public final class InsertValueContext {
     private int calculateParametersCount(final Collection<ExpressionSegment> assignments) {
         int result = 0;
         for (ExpressionSegment each : assignments) {
+            // 如果是被标记的值 那么就需要进行改写
             if (each instanceof ParameterMarkerExpressionSegment) {
                 result++;
             }
@@ -62,7 +70,13 @@ public final class InsertValueContext {
         result.addAll(assignments);
         return result;
     }
-    
+
+    /**
+     * 从传入的整个参数列表中 截取部分参数
+     * @param parameters
+     * @param parametersOffset
+     * @return
+     */
     private List<Object> getParameters(final List<Object> parameters, final int parametersOffset) {
         if (0 == parametersCount) {
             return Collections.emptyList();
@@ -77,6 +91,7 @@ public final class InsertValueContext {
      *
      * @param index index
      * @return value
+     * index 对应下标 在 valueExpression能定位到第几个 那么就从参数的第几个开始找
      */
     public Object getValue(final int index) {
         ExpressionSegment valueExpression = valueExpressions.get(index);

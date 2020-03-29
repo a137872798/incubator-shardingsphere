@@ -21,6 +21,7 @@ import lombok.ToString;
 
 /**
  * Always false sharding condition.
+ * 该条件对象总是返回false
  */
 @ToString
 public final class AlwaysFalseShardingCondition extends ShardingCondition {

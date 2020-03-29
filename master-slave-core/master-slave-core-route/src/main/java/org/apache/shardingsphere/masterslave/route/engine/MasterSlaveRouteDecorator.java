@@ -29,6 +29,7 @@ import java.util.LinkedList;
 
 /**
  * Route decorator for master-slave.
+ * 主从机包装对象
  */
 @RequiredArgsConstructor
 public final class MasterSlaveRouteDecorator implements DateNodeRouteDecorator {
@@ -39,7 +40,9 @@ public final class MasterSlaveRouteDecorator implements DateNodeRouteDecorator {
     public RouteContext decorate(final RouteContext routeContext) {
         Collection<RouteUnit> toBeRemoved = new LinkedList<>();
         Collection<RouteUnit> toBeAdded = new LinkedList<>();
+        // 遍历路由的所有结果
         for (RouteUnit each : routeContext.getRouteResult().getRouteUnits()) {
+            // 匹配规则时 就要将本对象移除 并且 通过MSRule 处理后获取了真正引向的 dataSource
             if (masterSlaveRule.getName().equalsIgnoreCase(each.getActualDataSourceName())) {
                 toBeRemoved.add(each);
                 toBeAdded.add(createNewRouteUnit(new MasterSlaveDataSourceRouter(masterSlaveRule).route(routeContext.getSqlStatementContext().getSqlStatement()), each));
@@ -49,9 +52,16 @@ public final class MasterSlaveRouteDecorator implements DateNodeRouteDecorator {
         routeContext.getRouteResult().getRouteUnits().addAll(toBeAdded);
         return routeContext;
     }
-    
+
+    /**
+     * 创建路由对象
+     * @param actualDataSourceName  本次真正指向的 数据源 (已经经过读写分离处理)
+     * @param originalTableUnit
+     * @return
+     */
     private RouteUnit createNewRouteUnit(final String actualDataSourceName, final RouteUnit originalTableUnit) {
         RouteUnit result = new RouteUnit(originalTableUnit.getLogicDataSourceName(), actualDataSourceName);
+        // 将所有 table 信息也移动过去
         result.getTableUnits().addAll(originalTableUnit.getTableUnits());
         return result;
     }

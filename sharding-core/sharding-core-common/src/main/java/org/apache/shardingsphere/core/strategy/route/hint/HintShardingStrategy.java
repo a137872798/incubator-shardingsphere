@@ -32,6 +32,7 @@ import java.util.TreeSet;
 
 /**
  * Hint sharding strategy.
+ * strategy 实际上算是 algorithm 的操纵者  将传入的参数做了包装后转发
  */
 public final class HintShardingStrategy implements ShardingStrategy {
     

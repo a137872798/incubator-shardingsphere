@@ -27,9 +27,13 @@ import java.util.Collection;
 
 /**
  * Adapter for {@code java.sql.Wrapper}.
+ * 实现该接口 使得允许开发者用于增强JDBC的实例
  */
 public abstract class WrapperAdapter implements Wrapper {
-    
+
+    /**
+     * JdbcMethodInvocation 实例内部包含了 方法信息 以及 本次调用实际的参数信息
+     */
     private final Collection<JdbcMethodInvocation> jdbcMethodInvocations = new ArrayList<>();
     
     @SuppressWarnings("unchecked")
@@ -53,6 +57,7 @@ public abstract class WrapperAdapter implements Wrapper {
      * @param methodName method name
      * @param argumentTypes argument types
      * @param arguments arguments
+     *                  记录某个方法的调用
      */
     @SneakyThrows
     public final void recordMethodInvocation(final Class<?> targetClass, final String methodName, final Class<?>[] argumentTypes, final Object[] arguments) {
@@ -63,6 +68,7 @@ public abstract class WrapperAdapter implements Wrapper {
      * Replay methods invocation.
      * 
      * @param target target object
+     *               某个对象要调用方法 如果该对象已经存在与内部 那么可以直接调用
      */
     public final void replayMethodsInvocation(final Object target) {
         for (JdbcMethodInvocation each : jdbcMethodInvocations) {

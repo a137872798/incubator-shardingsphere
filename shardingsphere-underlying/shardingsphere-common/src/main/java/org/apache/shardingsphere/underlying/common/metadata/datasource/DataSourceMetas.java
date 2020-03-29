@@ -33,9 +33,17 @@ import java.util.Objects;
  * Data source metas.
  */
 public final class DataSourceMetas {
-    
+
+    /**
+     * 通过 DatabaseAccessConfiguration 变相得到的更多信息
+     */
     private final Map<String, DataSourceMetaData> dataSourceMetaDataMap;
-    
+
+    /**
+     *
+     * @param databaseType  本批数据源的类型 (mysql)  shardingSphere 要求设置的数据源类型必须相同
+     * @param databaseAccessConfigurationMap   每个数据源对应的连接信息
+     */
     public DataSourceMetas(final DatabaseType databaseType, final Map<String, DatabaseAccessConfiguration> databaseAccessConfigurationMap) {
         dataSourceMetaDataMap = getDataSourceMetaDataMap(databaseType, databaseAccessConfigurationMap);
     }
@@ -43,6 +51,7 @@ public final class DataSourceMetas {
     private Map<String, DataSourceMetaData> getDataSourceMetaDataMap(final DatabaseType databaseType, final Map<String, DatabaseAccessConfiguration> databaseAccessConfigurationMap) {
         Map<String, DataSourceMetaData> result = new HashMap<>(databaseAccessConfigurationMap.size(), 1);
         for (Entry<String, DatabaseAccessConfiguration> entry : databaseAccessConfigurationMap.entrySet()) {
+            // 只看 mysql 实际上这里的 DataSourceMetaData 就是解析url 并获取更多信息
             result.put(entry.getKey(), databaseType.getDataSourceMetaData(entry.getValue().getUrl(), entry.getValue().getUsername()));
         }
         return result;
@@ -62,7 +71,13 @@ public final class DataSourceMetas {
         }
         return result;
     }
-    
+
+    /**
+     * 这里就是去重
+     * @param dataSourceName
+     * @param existedDataSourceNames
+     * @return
+     */
     private boolean isExisted(final String dataSourceName, final Collection<String> existedDataSourceNames) {
         DataSourceMetaData sample = dataSourceMetaDataMap.get(dataSourceName);
         for (String each : existedDataSourceNames) {
@@ -72,7 +87,13 @@ public final class DataSourceMetas {
         }
         return false;
     }
-    
+
+    /**
+     * 重复的基准就是 dataSource 的 schema host port 全部相同
+     * @param sample
+     * @param target
+     * @return
+     */
     private boolean isInSameDatabaseInstance(final DataSourceMetaData sample, final DataSourceMetaData target) {
         return sample instanceof MemorizedDataSourceMetaData
                 ? Objects.equals(target.getSchema(), sample.getSchema()) : target.getHostName().equals(sample.getHostName()) && target.getPort() == sample.getPort();

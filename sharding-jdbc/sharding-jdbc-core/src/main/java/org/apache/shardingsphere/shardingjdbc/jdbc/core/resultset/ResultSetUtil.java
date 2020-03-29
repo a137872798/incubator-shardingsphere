@@ -41,6 +41,7 @@ public final class ResultSetUtil {
      * @param value original value
      * @param convertType expected class type
      * @return converted value
+     * 将某一列值转换成需要的类型
      */
     public static Object convertValue(final Object value, final Class<?> convertType) {
         if (null == value) {

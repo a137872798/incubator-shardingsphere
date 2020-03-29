@@ -23,6 +23,7 @@ import java.util.Calendar;
 
 /**
  * Merged result after merge engine.
+ * 将多个ResultSet 看作一个对象
  */
 public interface MergedResult {
     
@@ -31,6 +32,7 @@ public interface MergedResult {
      * 
      * @return has next data
      * @throws SQLException SQL Exception
+     * 获取下一条记录
      */
     boolean next() throws SQLException;
     

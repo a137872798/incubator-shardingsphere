@@ -38,12 +38,14 @@ import java.util.Optional;
 
 /**
  * Sharding update statement validator.
+ * 什么是 shardingKey??? 总之不能对该字段进行更新
  */
 public final class ShardingUpdateStatementValidator implements ShardingStatementValidator<UpdateStatement> {
     
     @Override
     public void validate(final ShardingRule shardingRule, final UpdateStatement sqlStatement, final List<Object> parameters) {
         String tableName = sqlStatement.getTables().iterator().next().getTableName().getIdentifier().getValue();
+        // 获取所有 set 的信息
         for (AssignmentSegment each : sqlStatement.getSetAssignment().getAssignments()) {
             String shardingColumn = each.getColumn().getIdentifier().getValue();
             if (shardingRule.isShardingColumn(shardingColumn, tableName)) {

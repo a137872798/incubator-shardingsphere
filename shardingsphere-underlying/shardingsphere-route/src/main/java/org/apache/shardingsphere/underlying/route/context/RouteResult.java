@@ -34,7 +34,10 @@ import java.util.Set;
  */
 @Getter
 public final class RouteResult {
-    
+
+    /**
+     * 每个执行单元
+     */
     private final Collection<RouteUnit> routeUnits = new LinkedHashSet<>();
     
     /**
@@ -89,6 +92,7 @@ public final class RouteResult {
     public List<Set<String>> getActualTableNameGroups(final String dataSourceName, final Set<String> logicTableNames) {
         List<Set<String>> result = new ArrayList<>();
         for (String each : logicTableNames) {
+            // 找到该数据源下 某个逻辑表对应的所有物理表
             Set<String> actualTableNames = getActualTableNames(dataSourceName, each);
             if (!actualTableNames.isEmpty()) {
                 result.add(actualTableNames);
@@ -123,7 +127,12 @@ public final class RouteResult {
         }
         return result;
     }
-    
+
+    /**
+     * 通过物理数据源 反过来找到逻辑表
+     * @param dataSourceName
+     * @return
+     */
     private Set<String> getLogicTableNames(final String dataSourceName) {
         Set<String> result = new HashSet<>();
         for (RouteUnit each : routeUnits) {

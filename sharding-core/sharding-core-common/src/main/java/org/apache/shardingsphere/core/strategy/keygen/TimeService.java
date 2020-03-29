@@ -19,6 +19,7 @@ package org.apache.shardingsphere.core.strategy.keygen;
 
 /**
  * Time service.
+ * 该service 封装起来就是为了获取当前时间的
  */
 public class TimeService {
     

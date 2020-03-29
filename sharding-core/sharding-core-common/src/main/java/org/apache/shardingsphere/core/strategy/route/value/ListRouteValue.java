@@ -26,15 +26,17 @@ import java.util.Collection;
 
 /**
  * Route value for list values.
+ *  代表某个表的某个列 会使用哪个值
  */
 @RequiredArgsConstructor
 @Getter
 public final class ListRouteValue<T extends Comparable<?>> implements RouteValue {
-    
+
     private final String columnName;
     
     private final String tableName;
-    
+
+    // 单个代表 =  多个代表 in
     private final Collection<T> values;
     
     @Override

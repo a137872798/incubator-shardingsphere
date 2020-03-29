@@ -35,13 +35,17 @@ import java.util.TreeSet;
 
 /**
  * Standard sharding strategy.
+ * 标准策略
  */
 public final class StandardShardingStrategy implements ShardingStrategy {
-    
+
+    /**
+     * 逻辑sql 转换成 物理sql 的核心列 通过该列判断该怎样改写sql
+     */
     private final String shardingColumn;
-    
+
+    // 内部同时包含2套算法  一个是针对 "="  "in"  一个是针对 < > <= >=
     private final PreciseShardingAlgorithm preciseShardingAlgorithm;
-    
     private final RangeShardingAlgorithm rangeShardingAlgorithm;
     
     public StandardShardingStrategy(final StandardShardingStrategyConfiguration standardShardingStrategyConfig) {
@@ -51,17 +55,27 @@ public final class StandardShardingStrategy implements ShardingStrategy {
         preciseShardingAlgorithm = standardShardingStrategyConfig.getPreciseShardingAlgorithm();
         rangeShardingAlgorithm = standardShardingStrategyConfig.getRangeShardingAlgorithm();
     }
-    
+
+    /**
+     *
+     * @param availableTargetNames available data sources or tables's names  所有候选者
+     * @param shardingValues sharding values
+     * @param properties ShardingSphere properties
+     * @return
+     */
     @Override
     public Collection<String> doSharding(final Collection<String> availableTargetNames, final Collection<RouteValue> shardingValues, final ShardingSphereProperties properties) {
+        // 遍历每个会影响分表结果 的 value
         RouteValue shardingValue = shardingValues.iterator().next();
+        // 传入所有备选的 物理节点 并返回实际会用到的物理表名
         Collection<String> shardingResult = shardingValue instanceof ListRouteValue
                 ? doSharding(availableTargetNames, (ListRouteValue) shardingValue) : doSharding(availableTargetNames, (RangeRouteValue) shardingValue);
         Collection<String> result = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
         result.addAll(shardingResult);
         return result;
     }
-    
+
+    // 针对不同的入参 分别使用不同的算法对象进行处理
     @SuppressWarnings("unchecked")
     private Collection<String> doSharding(final Collection<String> availableTargetNames, final RangeRouteValue<?> shardingValue) {
         if (null == rangeShardingAlgorithm) {
@@ -70,11 +84,19 @@ public final class StandardShardingStrategy implements ShardingStrategy {
         return rangeShardingAlgorithm.doSharding(availableTargetNames, 
                 new RangeShardingValue(shardingValue.getTableName(), shardingValue.getColumnName(), shardingValue.getValueRange()));
     }
-    
+
+    /**
+     * 进行实际的分表操作
+     * @param availableTargetNames
+     * @param shardingValue
+     * @return
+     */
     @SuppressWarnings("unchecked")
     private Collection<String> doSharding(final Collection<String> availableTargetNames, final ListRouteValue<?> shardingValue) {
         Collection<String> result = new LinkedList<>();
+        // 如果是 "=" 那么只有一个值 如果是 "in"  代表有多个值  注意这里可能 某个 target 会重复添加 比如 in (1,3,5) 它们都会对应到单数表
         for (Comparable<?> each : shardingValue.getValues()) {
+            // 返回一个实际节点  (简单而言 PreciseShardingAlgorithm 就是将 物理表 一分为2/一分为4)
             String target = preciseShardingAlgorithm.doSharding(availableTargetNames, new PreciseShardingValue(shardingValue.getTableName(), shardingValue.getColumnName(), each));
             if (null != target) {
                 result.add(target);

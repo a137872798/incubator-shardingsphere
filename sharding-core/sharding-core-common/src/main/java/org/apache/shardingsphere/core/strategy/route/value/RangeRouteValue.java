@@ -24,6 +24,7 @@ import lombok.ToString;
 
 /**
  * Route value for range.
+ * 代表定位到了某个表某个列的一系列值
  */
 @RequiredArgsConstructor
 @Getter
@@ -33,6 +34,9 @@ public final class RangeRouteValue<T extends Comparable<?>> implements RouteValu
     private final String columnName;
     
     private final String tableName;
-    
+
+    /**
+     * 存在多个 范围实现 内部包含一个值 以及一些判定是否满足范围的表达式
+     */
     private final Range<T> valueRange;
 }

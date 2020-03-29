@@ -31,11 +31,13 @@ import java.util.Collections;
 
 /**
  * Remove token generator.
+ * token生成器的默认实现 应该就是从sql 中找到token 同时从sql中移除
  */
 public final class RemoveTokenGenerator implements CollectionSQLTokenGenerator {
     
     @Override
     public boolean isGenerateSQLToken(final SQLStatementContext sqlStatementContext) {
+        // 如果本次会话是查询表 相关信息的 那么根据 fromSchema 的结果
         if (sqlStatementContext.getSqlStatement() instanceof ShowTablesStatement) {
             return ((ShowTablesStatement) sqlStatementContext.getSqlStatement()).getFromSchema().isPresent();
         }
@@ -47,10 +49,16 @@ public final class RemoveTokenGenerator implements CollectionSQLTokenGenerator {
         }
         return false;
     }
-    
+
+    /**
+     * 从当前会话中生成一组 removeToken
+     * @param sqlStatementContext SQL statement context
+     * @return
+     */
     @Override
     public Collection<RemoveToken> generateSQLTokens(final SQLStatementContext sqlStatementContext) {
         if (sqlStatementContext.getSqlStatement() instanceof ShowTablesStatement) {
+            // 首先要确保 存在 fromSchema 之后获取该值 并包装成 RemoveToken
             Preconditions.checkState(((ShowTablesStatement) sqlStatementContext.getSqlStatement()).getFromSchema().isPresent());
             RemoveAvailable removeAvailable = ((ShowTablesStatement) sqlStatementContext.getSqlStatement()).getFromSchema().get();
             return Collections.singletonList(new RemoveToken(removeAvailable.getStartIndex(), removeAvailable.getStopIndex()));

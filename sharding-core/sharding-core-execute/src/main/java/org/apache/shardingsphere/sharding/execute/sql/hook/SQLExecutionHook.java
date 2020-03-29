@@ -24,6 +24,7 @@ import java.util.Map;
 
 /**
  * SQL Execution hook.
+ * 执行sql 时的钩子
  */
 public interface SQLExecutionHook {
     

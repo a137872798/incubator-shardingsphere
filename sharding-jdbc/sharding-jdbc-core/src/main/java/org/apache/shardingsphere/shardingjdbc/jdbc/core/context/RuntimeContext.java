@@ -27,6 +27,7 @@ import org.apache.shardingsphere.spi.database.type.DatabaseType;
  * Runtime context.
  *
  * @param <T> type of rule
+ *           当shardingSphere 启动时 包含运行时信息的上下文
  */
 public interface RuntimeContext<T extends BaseRule> extends AutoCloseable {
     
@@ -34,6 +35,7 @@ public interface RuntimeContext<T extends BaseRule> extends AutoCloseable {
      * Get rule.
      * 
      * @return rule
+     * 获取本次设置的全局rule 信息
      */
     T getRule();
     
@@ -41,6 +43,7 @@ public interface RuntimeContext<T extends BaseRule> extends AutoCloseable {
      * Get properties.
      *
      * @return properties
+     * 获取本次所有额外属性
      */
     ShardingSphereProperties getProperties();
     
@@ -48,6 +51,7 @@ public interface RuntimeContext<T extends BaseRule> extends AutoCloseable {
      * Get database type.
      * 
      * @return database type
+     * 本次数据源类型 (无论配置了多少数据源 它们的类型必须是一致的)
      */
     DatabaseType getDatabaseType();
     

@@ -23,6 +23,7 @@ import org.apache.shardingsphere.sql.parser.sql.ASTNode;
  * Value AST node.
  *
  * @param <T> type of value
+ *           解析出来的该部分 对应一个值
  */
 public interface ValueASTNode<T> extends ASTNode {
     

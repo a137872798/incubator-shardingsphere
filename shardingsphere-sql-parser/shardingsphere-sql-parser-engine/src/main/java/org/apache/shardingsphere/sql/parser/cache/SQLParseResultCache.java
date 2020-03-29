@@ -25,6 +25,7 @@ import java.util.Optional;
 
 /**
  * SQL parse result cache.
+ * 用于保存sql 的解析结果
  */
 public final class SQLParseResultCache {
     

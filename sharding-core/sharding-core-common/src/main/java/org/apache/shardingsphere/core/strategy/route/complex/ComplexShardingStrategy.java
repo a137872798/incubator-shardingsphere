@@ -38,9 +38,13 @@ import java.util.TreeSet;
 
 /**
  * Complex sharding strategy.
+ * 复合键 代理策略 (基于多个键来改写sql 从而关联到多个物理表)
  */
 public final class ComplexShardingStrategy implements ShardingStrategy {
-    
+
+    /**
+     * 涉及到的所有键的列名
+     */
     @Getter
     private final Collection<String> shardingColumns;
     
@@ -50,22 +54,33 @@ public final class ComplexShardingStrategy implements ShardingStrategy {
         Preconditions.checkNotNull(complexShardingStrategyConfig.getShardingColumns(), "Sharding columns cannot be null.");
         Preconditions.checkNotNull(complexShardingStrategyConfig.getShardingAlgorithm(), "Sharding algorithm cannot be null.");
         shardingColumns = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+        // 将包含多个列的字符串拆分后 每个元素都进行去空操作 填充到shardingColumns
         shardingColumns.addAll(Splitter.on(",").trimResults().splitToList(complexShardingStrategyConfig.getShardingColumns()));
         shardingAlgorithm = complexShardingStrategyConfig.getShardingAlgorithm();
     }
-    
+
+    /**
+     *
+     * @param availableTargetNames available data sources or tables's names  候选的一组数据源 或者表名  本次代理后就会从这里面的表中查询数据
+     * @param shardingValues sharding values  代表一系列路由的结果
+     * @param properties ShardingSphere properties   存放一些 ShardingSphere相关的属性
+     * @return
+     */
     @SuppressWarnings("unchecked")
     @Override
     public Collection<String> doSharding(final Collection<String> availableTargetNames, final Collection<RouteValue> shardingValues, final ShardingSphereProperties properties) {
         Map<String, Collection<Comparable<?>>> columnShardingValues = new HashMap<>(shardingValues.size(), 1);
         Map<String, Range<Comparable<?>>> columnRangeValues = new HashMap<>(shardingValues.size(), 1);
         String logicTableName = "";
+        // 先遍历所有的路由结果 应该是这样 一个逻辑sql 本身只定位到一个范围 而在进行改写后就会生成多个routeValue 代表指向多个结果
         for (RouteValue each : shardingValues) {
+            // 根据类型存放到不同的容器中 (Range/List)
             if (each instanceof ListRouteValue) {
                 columnShardingValues.put(each.getColumnName(), ((ListRouteValue) each).getValues());
             } else if (each instanceof RangeRouteValue) {
                 columnRangeValues.put(each.getColumnName(), ((RangeRouteValue) each).getValueRange());
             }
+            // 难道它们对应的表都是一样的吗
             logicTableName = each.getTableName();
         }
         Collection<String> shardingResult = shardingAlgorithm.doSharding(availableTargetNames, new ComplexKeysShardingValue(logicTableName, columnShardingValues, columnRangeValues));

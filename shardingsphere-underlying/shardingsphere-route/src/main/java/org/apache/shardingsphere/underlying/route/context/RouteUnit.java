@@ -30,17 +30,27 @@ import java.util.Set;
 
 /**
  * Route unit.
+ * 路由的基本单位  定位到具体的数据源
  */
 @RequiredArgsConstructor
 @Getter
 @EqualsAndHashCode
 @ToString
 public final class RouteUnit {
-    
+
+    /**
+     * 逻辑数据源
+     */
     private final String logicDataSourceName;
-    
+
+    /**
+     * 实际数据源
+     */
     private final String actualDataSourceName;
-    
+
+    /**
+     * 定位到数据源后 还可能是多个表
+     */
     private final List<TableUnit> tableUnits = new LinkedList<>();
     
     public RouteUnit(final String dataSourceName) {
@@ -54,6 +64,7 @@ public final class RouteUnit {
      * @param dataSourceName data source name
      * @param actualTableName actual table name
      * @return routing table unit
+     * 如果该对象的dataSourceName 匹配 且 包含制定的 tableName 那么返回实体对象
      */
     public Optional<TableUnit> getTableUnit(final String dataSourceName, final String actualTableName) {
         for (TableUnit each : tableUnits) {
@@ -69,6 +80,7 @@ public final class RouteUnit {
      *
      * @param logicTableName logic table name
      * @return  actual tables' names
+     * 找到匹配该逻辑表的所有物理表名
      */
     public Set<String> getActualTableNames(final String logicTableName) {
         Set<String> result = new HashSet<>();
@@ -84,6 +96,7 @@ public final class RouteUnit {
      * Get logic tables' names via data source name.
      *
      * @return  logic tables' names
+     * 返回所有逻辑表 注意这里使用set 来去重
      */
     public Set<String> getLogicTableNames() {
         Set<String> result = new HashSet<>(tableUnits.size(), 1);

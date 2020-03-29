@@ -28,7 +28,10 @@ import java.util.concurrent.ConcurrentHashMap;
  * Table metas.
  */
 public final class TableMetas {
-    
+
+    /**
+     * 本次涉及到的所有表的元数据信息
+     */
     private final Map<String, TableMetaData> tables;
     
     public TableMetas(final Map<String, TableMetaData> tables) {

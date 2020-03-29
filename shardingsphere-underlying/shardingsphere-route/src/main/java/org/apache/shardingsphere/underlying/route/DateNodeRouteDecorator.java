@@ -21,6 +21,7 @@ import org.apache.shardingsphere.underlying.route.context.RouteContext;
 
 /**
  * Data node route decorator.
+ * 对返回的结果进行包装   DataNode 路由到了某个物理表
  */
 public interface DateNodeRouteDecorator {
     

@@ -21,6 +21,7 @@ import org.apache.shardingsphere.sql.parser.sql.statement.AbstractSQLStatement;
 
 /**
  * DAL statement.
+ * 代表 属于 dal的一类sql  在这一层根据sql类别做了划分  同级的还有 DDLStatement/DMLStatement 等
  */
 public abstract class DALStatement extends AbstractSQLStatement {
 }

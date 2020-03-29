@@ -35,6 +35,7 @@ import java.util.Calendar;
 
 /**
  * Unsupported Database meta data result set.
+ * 这里重写了部分方法 并标明不支持
  */
 public abstract class AbstractUnsupportedDatabaseMetaDataResultSet extends AbstractUnsupportedOperationResultSet {
     

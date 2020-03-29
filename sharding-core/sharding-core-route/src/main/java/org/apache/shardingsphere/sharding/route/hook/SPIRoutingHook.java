@@ -25,15 +25,19 @@ import java.util.Collection;
 
 /**
  * Routing hook for SPI.
+ * 通过SPI 机制加载该接口的实现类 并且添加到 列表中做统一管理
  */
 public final class SPIRoutingHook implements RoutingHook {
     
     private final Collection<RoutingHook> routingHooks = NewInstanceServiceLoader.newServiceInstances(RoutingHook.class);
     
     static {
+        // 加载该类时 先触发该方法
         NewInstanceServiceLoader.register(RoutingHook.class);
     }
-    
+
+    // 做统一处理
+
     @Override
     public void start(final String sql) {
         for (RoutingHook each : routingHooks) {

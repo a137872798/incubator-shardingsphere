@@ -23,6 +23,7 @@ import org.apache.shardingsphere.underlying.common.rule.BaseRule;
 
 /**
  * Databases shadow rule.
+ * 什么是影子规则
  */
 @Getter
 public class ShadowRule implements BaseRule {

@@ -32,17 +32,30 @@ import java.util.TreeMap;
 
 /**
  * Standard parameter builder.
+ * 标准的参数构建对象
  */
 @RequiredArgsConstructor
 public final class StandardParameterBuilder implements ParameterBuilder {
-    
+
+    /**
+     * 一组原始参数
+     */
     private final List<Object> originalParameters;
-    
+
+    /**
+     * 从第几个位置增加了多少个参数
+     */
     @Getter
     private final Map<Integer, Collection<Object>> addedIndexAndParameters = new TreeMap<>();
-    
+
+    /**
+     * 将指定下标的参数替换成别的
+     */
     private final Map<Integer, Object> replacedIndexAndParameters = new LinkedHashMap<>();
 
+    /**
+     * 代表某个下标对应的参数会被移除
+     */
     private final List<Integer> removeIndexAndParameters = new ArrayList<>();
     
     /**
@@ -73,10 +86,16 @@ public final class StandardParameterBuilder implements ParameterBuilder {
     public void addRemovedParameters(final int index) {
         removeIndexAndParameters.add(index);
     }
-    
+
+    /**
+     * 获取最终的参数信息
+     * @return
+     */
     @Override
     public List<Object> getParameters() {
+        // 首先获取原始参数
         List<Object> result = new LinkedList<>(originalParameters);
+        // 根据下标 替换掉对应参数
         for (Entry<Integer, Object> entry : replacedIndexAndParameters.entrySet()) {
             result.set(entry.getKey(), entry.getValue());
         }
@@ -84,9 +103,11 @@ public final class StandardParameterBuilder implements ParameterBuilder {
             if (entry.getKey() > result.size()) {
                 result.addAll(entry.getValue());
             } else {
+                // 以指定下标为起点 挨个添加元素 (下标会移动)
                 result.addAll(entry.getKey(), entry.getValue());
             }
         }
+        // 最后进行移除
         for (int index : removeIndexAndParameters) {
             result.remove(index);
         }

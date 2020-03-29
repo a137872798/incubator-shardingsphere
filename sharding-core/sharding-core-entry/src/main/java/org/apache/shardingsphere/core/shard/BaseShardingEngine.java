@@ -53,16 +53,29 @@ import java.util.Map;
 
 /**
  * Base sharding engine.
+ * 引擎对象  内部维护了各个关键的class
  */
 @RequiredArgsConstructor
 public abstract class BaseShardingEngine {
-    
+
+    /**
+     * 本次使用的分库分表规则
+     */
     private final ShardingRule shardingRule;
-    
+
+    /**
+     * 内部包含有关的配置
+     */
     private final ShardingSphereProperties properties;
-    
+
+    /**
+     * 所有相关的元数据
+     */
     private final ShardingSphereMetaData metaData;
-    
+
+    /**
+     * 包含一个路由对象
+     */
     @Getter
     private final ShardingRouter shardingRouter;
     
@@ -72,6 +85,7 @@ public abstract class BaseShardingEngine {
         this.shardingRule = shardingRule;
         this.properties = properties;
         this.metaData = metaData;
+        // 通过引擎对象生成路由对象
         shardingRouter = new ShardingRouter(shardingRule, properties, metaData, sqlParserEngine);
         routingHook = new SPIRoutingHook();
     }
@@ -79,14 +93,18 @@ public abstract class BaseShardingEngine {
     /**
      * Shard.
      *
-     * @param sql SQL
-     * @param parameters SQL parameters
+     * @param sql SQL  本次待解析的sql
+     * @param parameters SQL parameters  本次携带的参数
      * @return execution context
      */
     public ExecutionContext shard(final String sql, final List<Object> parameters) {
+        // 为了保护入参 还特地使用了深拷贝
         List<Object> clonedParameters = cloneParameters(parameters);
+        // 这里已经得到分表的结果了
         ShardingRouteContext shardingRouteContext = executeRoute(sql, clonedParameters);
+        // 将语句的会话信息和主键 包装成 执行时上下文
         ShardingExecutionContext result = new ShardingExecutionContext(shardingRouteContext.getSqlStatementContext(), shardingRouteContext.getGeneratedKey().orElse(null));
+        // 改写实际执行的sql 并添加到 result 中
         result.getExecutionUnits().addAll(HintManager.isDatabaseShardingOnly() ? convert(sql, clonedParameters, shardingRouteContext) : rewriteAndConvert(sql, clonedParameters, shardingRouteContext));
         boolean showSQL = properties.getValue(PropertiesConstant.SQL_SHOW);
         if (showSQL) {
@@ -95,15 +113,33 @@ public abstract class BaseShardingEngine {
         }
         return result;
     }
-    
+
+    /**
+     * 拷贝一份该参数的副本
+     * @param parameters
+     * @return
+     */
     protected abstract List<Object> cloneParameters(List<Object> parameters);
-    
+
+    /**
+     * 通过sql 以及参数信息 进行路由
+     * @param sql
+     * @param parameters
+     * @return
+     */
     protected abstract ShardingRouteContext route(String sql, List<Object> parameters);
-    
+
+    /**
+     * 开始路由
+     * @param sql
+     * @param clonedParameters
+     * @return
+     */
     private ShardingRouteContext executeRoute(final String sql, final List<Object> clonedParameters) {
         routingHook.start(sql);
         try {
             ShardingRouteContext result = decorate(route(sql, clonedParameters));
+            // 在处理完读写分离后 触发后置钩子
             routingHook.finishSuccess(result, metaData.getTables());
             return result;
             // CHECKSTYLE:OFF
@@ -113,35 +149,66 @@ public abstract class BaseShardingEngine {
             throw ex;
         }
     }
-    
+
+    /**
+     * 对返回的context 进行包装
+     * @param shardingRouteContext
+     * @return
+     */
     private ShardingRouteContext decorate(final ShardingRouteContext shardingRouteContext) {
         ShardingRouteContext result = shardingRouteContext;
+        // 获取当前所有主从机规则   这里就是实现读写分离的地方
         for (MasterSlaveRule each : shardingRule.getMasterSlaveRules()) {
             result = (ShardingRouteContext) new MasterSlaveRouteDecorator(each).decorate(result);
         }
         return result;
     }
-    
+
+    /**
+     * 将相关参数转换成执行单元  之前只是一个 路由到物理表的信息 现在ExecutionUnit 中还包含了本次待执行的sql
+     * @param sql
+     * @param parameters
+     * @param shardingRouteContext  包含路由结果
+     * @return
+     */
     private Collection<ExecutionUnit> convert(final String sql, final List<Object> parameters, final ShardingRouteContext shardingRouteContext) {
         Collection<ExecutionUnit> result = new LinkedHashSet<>();
+        // 获取本次所有路由单元
         for (RouteUnit each : shardingRouteContext.getRouteResult().getRouteUnits()) {
+            // 根据实际路由到的数据源信息 以及 sql parameters 来生成执行单元
             result.add(new ExecutionUnit(each.getActualDataSourceName(), new SQLUnit(sql, parameters)));
         }
         return result;
     }
-    
+
+    /**
+     * 改写sql 语句 以及添加/修改一些必备的参数后 返回可以执行的实际单元 (内部的sql 已经被改写)
+     * @param sql
+     * @param parameters
+     * @param shardingRouteContext
+     * @return
+     */
     private Collection<ExecutionUnit> rewriteAndConvert(final String sql, final List<Object> parameters, final ShardingRouteContext shardingRouteContext) {
         Collection<ExecutionUnit> result = new LinkedHashSet<>();
         SQLRewriteContext sqlRewriteContext = new SQLRewriteEntry(
                 metaData, properties).createSQLRewriteContext(sql, parameters, shardingRouteContext.getSqlStatementContext(), createSQLRewriteContextDecorator(shardingRouteContext));
+        // 获取本次定位到的所有物理表路径(以数据源做分界线) 也就是几个路由结果 就会生成几个实际的sql
         for (RouteUnit each : shardingRouteContext.getRouteResult().getRouteUnits()) {
+            // 创建重写引擎
             ShardingSQLRewriteEngine sqlRewriteEngine = new ShardingSQLRewriteEngine(shardingRule, shardingRouteContext.getShardingConditions(), each);
+            // 创建重写结果 这里已经更改了sql   TODO  具体的改写流程就不看了  之后还是debug调试比较清楚  大体先了解整个运作流程 在具体使用时再配合debug理解改写流程
             SQLRewriteResult sqlRewriteResult = sqlRewriteEngine.rewrite(sqlRewriteContext);
+            // 这里改写后的参数也设置进去了
             result.add(new ExecutionUnit(each.getActualDataSourceName(), new SQLUnit(sqlRewriteResult.getSql(), sqlRewriteResult.getParameters())));
         }
         return result;
     }
-    
+
+    /**
+     * 创建装饰对象
+     * @param shardingRouteContext
+     * @return
+     */
     private Map<BaseRule, SQLRewriteContextDecorator> createSQLRewriteContextDecorator(final ShardingRouteContext shardingRouteContext) {
         Map<BaseRule, SQLRewriteContextDecorator> result = new LinkedHashMap<>(2, 1);
         result.put(shardingRule, new ShardingSQLRewriteContextDecorator(shardingRouteContext));

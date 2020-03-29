@@ -23,10 +23,14 @@ import org.apache.shardingsphere.api.sharding.hint.HintShardingAlgorithm;
 
 /**
  * Hint sharding strategy configuration.
+ * 由用户传入 hint 来确定sql拆分规则
  */
 @Getter
 public final class HintShardingStrategyConfiguration implements ShardingStrategyConfiguration {
-    
+
+    /**
+     * 通过外部传入算法来初始化
+     */
     private final HintShardingAlgorithm shardingAlgorithm;
     
     public HintShardingStrategyConfiguration(final HintShardingAlgorithm shardingAlgorithm) {

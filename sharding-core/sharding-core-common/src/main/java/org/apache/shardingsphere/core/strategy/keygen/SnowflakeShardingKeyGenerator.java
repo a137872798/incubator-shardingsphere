@@ -47,11 +47,16 @@ import java.util.Properties;
  * <p>
  * Call @{@code SnowflakeShardingKeyGenerator.setMaxTolerateTimeDifferenceMilliseconds} to set max tolerate time difference milliseconds, default value is 0.
  * </p>
+ * 基于雪花算法的 全局唯一id生成器
  */
 public final class SnowflakeShardingKeyGenerator implements ShardingKeyGenerator {
-    
+
+    /**
+     * 默认为 0 是一个占位符
+     */
     public static final long EPOCH;
-    
+
+    // 代表某些字段的标识位
     private static final long SEQUENCE_BITS = 12L;
     
     private static final long WORKER_ID_BITS = 10L;
@@ -84,6 +89,7 @@ public final class SnowflakeShardingKeyGenerator implements ShardingKeyGenerator
     private long lastMilliseconds;
     
     static {
+        // 雪花算法的提出时间是2016
         Calendar calendar = Calendar.getInstance();
         calendar.set(2016, Calendar.NOVEMBER, 1);
         calendar.set(Calendar.HOUR_OF_DAY, 0);
@@ -97,43 +103,63 @@ public final class SnowflakeShardingKeyGenerator implements ShardingKeyGenerator
     public String getType() {
         return "SNOWFLAKE";
     }
-    
+
+
     @Override
     public synchronized Comparable<?> generateKey() {
         long currentMilliseconds = timeService.getCurrentMillis();
+        // 如果时间回拨在允许范围内 那么 sleep一段时间    差距过大则抛出异常
         if (waitTolerateTimeDifferenceIfNeed(currentMilliseconds)) {
             currentMilliseconds = timeService.getCurrentMillis();
         }
+        // 这里每个单位时间(也就是时间戳的最小单位 毫秒) 只能申请至多 sequence 个id 如果超过 就必须等待到下一个时间窗口
         if (lastMilliseconds == currentMilliseconds) {
             if (0L == (sequence = (sequence + 1) & SEQUENCE_MASK)) {
                 currentMilliseconds = waitUntilNextTime(currentMilliseconds);
             }
         } else {
+            // 进入了下一个时间窗口 也就是新的 毫秒
+            // 这里允许分配下一个时间窗口 并且增加 sequenceOffset的值
             vibrateSequenceOffset();
+            // 同步 sequence 与 sequenceOffset
             sequence = sequenceOffset;
         }
         lastMilliseconds = currentMilliseconds;
         return ((currentMilliseconds - EPOCH) << TIMESTAMP_LEFT_SHIFT_BITS) | (getWorkerId() << WORKER_ID_LEFT_SHIFT_BITS) | sequence;
     }
-    
+
+    /**
+     * 是否出现了指针回拨
+     * @param currentMilliseconds
+     * @return
+     */
     @SneakyThrows
     private boolean waitTolerateTimeDifferenceIfNeed(final long currentMilliseconds) {
         if (lastMilliseconds <= currentMilliseconds) {
             return false;
         }
         long timeDifferenceMilliseconds = lastMilliseconds - currentMilliseconds;
+        // 如果时间差过大 那么抛出异常
         Preconditions.checkState(timeDifferenceMilliseconds < getMaxTolerateTimeDifferenceMilliseconds(), 
                 "Clock is moving backwards, last time is %d milliseconds, current time is %d milliseconds", lastMilliseconds, currentMilliseconds);
         Thread.sleep(timeDifferenceMilliseconds);
         return true;
     }
-    
+
+    /**
+     * 在全局范围内确保该进程的惟一性  一般在配置文件中设置
+     * @return
+     */
     private long getWorkerId() {
         long result = Long.valueOf(properties.getProperty("worker.id", String.valueOf(WORKER_ID)));
         Preconditions.checkArgument(result >= 0L && result < WORKER_ID_MAX_VALUE);
         return result;
     }
-    
+
+    /**
+     * 允许序列振动的最大值
+     * @return
+     */
     private int getMaxVibrationOffset() {
         int result = Integer.parseInt(properties.getProperty("max.vibration.offset", String.valueOf(DEFAULT_VIBRATION_VALUE)));
         Preconditions.checkArgument(result >= 0 && result <= SEQUENCE_MASK, "Illegal max vibration offset");
@@ -143,7 +169,12 @@ public final class SnowflakeShardingKeyGenerator implements ShardingKeyGenerator
     private int getMaxTolerateTimeDifferenceMilliseconds() {
         return Integer.valueOf(properties.getProperty("max.tolerate.time.difference.milliseconds", String.valueOf(MAX_TOLERATE_TIME_DIFFERENCE_MILLISECONDS)));
     }
-    
+
+    /**
+     * 自旋 等待进入下一毫秒
+     * @param lastTime
+     * @return
+     */
     private long waitUntilNextTime(final long lastTime) {
         long result = timeService.getCurrentMillis();
         while (result <= lastTime) {
@@ -151,7 +182,10 @@ public final class SnowflakeShardingKeyGenerator implements ShardingKeyGenerator
         }
         return result;
     }
-    
+
+    /**
+     * 序列在合理范围内 递增 一旦超过了某个值 总是返回0
+     */
     private void vibrateSequenceOffset() {
         sequenceOffset = sequenceOffset >= getMaxVibrationOffset() ? 0 : sequenceOffset + 1;
     }

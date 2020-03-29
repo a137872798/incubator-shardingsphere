@@ -19,6 +19,7 @@ package org.apache.shardingsphere.sql.parser.sql;
 
 /**
  * AST node.
+ * AST 好像是一个语法解析树  那么 该接口就代表sql 在整个语法解析过程中被拆分的各个片段(或者说节点)
  */
 public interface ASTNode {
 }

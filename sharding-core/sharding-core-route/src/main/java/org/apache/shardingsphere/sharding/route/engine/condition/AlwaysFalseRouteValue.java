@@ -21,6 +21,7 @@ import org.apache.shardingsphere.core.strategy.route.value.RouteValue;
 
 /**
  * Always false route value.
+ * 一个空的路由结果
  */
 public final class AlwaysFalseRouteValue implements RouteValue {
     

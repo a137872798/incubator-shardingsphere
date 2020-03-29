@@ -29,11 +29,15 @@ import java.util.stream.Collectors;
  * Binding table rule.
  * 
  * <p>Binding table is same sharding rule with different tables, use one of them can deduce other name of actual tables and data sources.</p>
+ * 代表某几个 table对应的分表规则是一致的 可以绑定在一起
  */
 @RequiredArgsConstructor
 @Getter
 public final class BindingTableRule {
-    
+
+    /**
+     * 存放一组 table 的规则
+     */
     private final List<TableRule> tableRules;
     
     /**
@@ -41,6 +45,7 @@ public final class BindingTableRule {
      * 
      * @param logicTableName logic table name
      * @return contains this logic table or not
+     * 判断该组规则中是否包含该表的规则
      */
     public boolean hasLogicTable(final String logicTableName) {
         for (TableRule each : tableRules) {
@@ -61,6 +66,7 @@ public final class BindingTableRule {
      */
     public String getBindingActualTable(final String dataSource, final String logicTable, final String otherActualTable) {
         int index = -1;
+        // 在rule 中尝试找到 一个包含otherActualTable 的 dataNode
         for (TableRule each : tableRules) {
             index = each.findActualTableIndex(dataSource, otherActualTable);
             if (-1 != index) {
@@ -77,7 +83,11 @@ public final class BindingTableRule {
         }
         throw new ShardingSphereConfigurationException("Cannot find binding actual table, data source: %s, logic table: %s, other actual table: %s", dataSource, logicTable, otherActualTable);
     }
-    
+
+    /**
+     * 将所有表规则对应的逻辑表信息返回
+     * @return
+     */
     Collection<String> getAllLogicTables() {
         return tableRules.stream().map(input -> input.getLogicTable().toLowerCase()).collect(Collectors.toList());
     }

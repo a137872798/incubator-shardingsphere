@@ -29,13 +29,22 @@ import java.util.Optional;
  * Condition value.
  */
 public final class ConditionValue {
-    
+
+    /**
+     * 根据表达式信息 解析出会使用的参数
+     */
     private final Comparable value;
     
     public ConditionValue(final ExpressionSegment expressionSegment, final List<Object> parameters) {
         value = getValue(expressionSegment, parameters);
     }
-    
+
+    /**
+     * 传入表达式 以及要使用的参数
+     * @param expressionSegment
+     * @param parameters
+     * @return
+     */
     private Comparable getValue(final ExpressionSegment expressionSegment, final List<Object> parameters) {
         if (expressionSegment instanceof ParameterMarkerExpressionSegment) {
             return getValue((ParameterMarkerExpressionSegment) expressionSegment, parameters);
@@ -45,7 +54,13 @@ public final class ConditionValue {
         }
         return null;
     }
-    
+
+    /**
+     * 根据下标获取本次使用的参数
+     * @param expressionSegment
+     * @param parameters
+     * @return
+     */
     private Comparable getValue(final ParameterMarkerExpressionSegment expressionSegment, final List<Object> parameters) {
         Object result = parameters.get(expressionSegment.getParameterMarkerIndex());
         Preconditions.checkArgument(result instanceof Comparable, "Sharding value must implements Comparable.");

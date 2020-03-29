@@ -40,9 +40,15 @@ import java.util.List;
 @Getter
 @ToString(callSuper = true)
 public final class InsertStatementContext extends CommonSQLStatementContext<InsertStatement> implements TableAvailable {
-    
+
+    /**
+     * 本次会话中所有表信息都在该对象内
+     */
     private final TablesContext tablesContext;
-    
+
+    /**
+     * 涉及到的所有列
+     */
     private final List<String> columnNames;
     
     private final List<InsertValueContext> insertValueContexts;
@@ -57,9 +63,12 @@ public final class InsertStatementContext extends CommonSQLStatementContext<Inse
     private List<InsertValueContext> getInsertValueContexts(final List<Object> parameters) {
         List<InsertValueContext> result = new LinkedList<>();
         int parametersOffset = 0;
+        // 每个 ExpressionSegment 对应一个插入的某个值 以及 字段  而一个插入语句 对应多个ExpressionSegment
+        // 如果是批量插入 那么每个子句都对应多个ExpressionSegment
         for (Collection<ExpressionSegment> each : getSqlStatement().getAllValueExpressions()) {
             InsertValueContext insertValueContext = new InsertValueContext(each, parameters, parametersOffset);
             result.add(insertValueContext);
+            // 移动 parameters 的偏移量
             parametersOffset += insertValueContext.getParametersCount();
         }
         return result;

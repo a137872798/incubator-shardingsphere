@@ -28,14 +28,17 @@ import java.util.List;
  * Stream merged result for iterator.
  */
 public final class IteratorStreamMergedResult extends StreamMergedResult {
-    
+
+    /**
+     * 每个 QueryResult 还是一组结果
+     */
     private final Iterator<QueryResult> queryResults;
-    
+
     public IteratorStreamMergedResult(final List<QueryResult> queryResults) {
         this.queryResults = queryResults.iterator();
         setCurrentQueryResult(this.queryResults.next());
     }
-    
+
     @Override
     public boolean next() throws SQLException {
         if (getCurrentQueryResult().next()) {

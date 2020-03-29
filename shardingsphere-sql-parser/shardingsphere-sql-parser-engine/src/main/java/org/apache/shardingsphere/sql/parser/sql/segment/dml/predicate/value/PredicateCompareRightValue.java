@@ -27,7 +27,10 @@ import org.apache.shardingsphere.sql.parser.sql.segment.dml.expr.ExpressionSegme
 @RequiredArgsConstructor
 @Getter
 public final class PredicateCompareRightValue implements PredicateRightValue {
-    
+
+    /**
+     * 比较关系的 操作符  比如 =  <  >  <=   >=
+     */
     private final String operator;
     
     private final ExpressionSegment expression;

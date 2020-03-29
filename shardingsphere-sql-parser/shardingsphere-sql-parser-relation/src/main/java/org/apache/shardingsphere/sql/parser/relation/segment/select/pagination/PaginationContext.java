@@ -140,11 +140,18 @@ public final class PaginationContext {
         if (isMaxRowCount(shardingStatement)) {
             return Integer.MAX_VALUE;
         }
+        // 否则正常情况下 分别获取每个分表的  rowCount 就够了 最差情况 就是数据全部落在一张表 那么记录数也够
         return rowCountSegment instanceof LimitValueSegment ? actualOffset + actualRowCount : actualRowCount;
     }
-    
+
+    /**
+     * 出现分页和分组的情况 就会读取全部的数据
+     * @param shardingStatement
+     * @return
+     */
     private boolean isMaxRowCount(final SelectStatementContext shardingStatement) {
         return (!shardingStatement.getGroupByContext().getItems().isEmpty()
+                // 存在聚合函数的场景
                 || !shardingStatement.getProjectionsContext().getAggregationProjections().isEmpty()) && !shardingStatement.isSameGroupByAndOrderByItems();
     }
 }

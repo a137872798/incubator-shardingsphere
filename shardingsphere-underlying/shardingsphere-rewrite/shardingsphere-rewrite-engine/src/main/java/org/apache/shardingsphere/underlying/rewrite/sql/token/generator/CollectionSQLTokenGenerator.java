@@ -26,6 +26,7 @@ import java.util.Collection;
  * SQL token generator for collection.
  * 
  * @param <T> type of SQL statement context
+ *           从sql中解析出一组token
  */
 public interface CollectionSQLTokenGenerator<T extends SQLStatementContext> extends SQLTokenGenerator {
     

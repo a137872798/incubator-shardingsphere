@@ -19,12 +19,14 @@ package org.apache.shardingsphere.underlying.common.constant.properties;
 
 /**
  * Typed properties key interface.
+ * 代表一个属性值(键值对)  包含 值的类型 key, 默认值
  */
 public interface TypedPropertiesKey {
     
     /**
      * return the specific type.
      * @return type
+     * 属性的key 有指定的类型
      */
     Class<?> getType();
     

@@ -30,7 +30,10 @@ import java.util.Calendar;
  */
 @Setter
 public abstract class StreamMergedResult implements MergedResult {
-    
+
+    /**
+     * 当前光标指向的对象
+     */
     private QueryResult currentQueryResult;
     
     private boolean wasNull;

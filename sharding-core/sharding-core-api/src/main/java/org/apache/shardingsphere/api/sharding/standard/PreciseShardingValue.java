@@ -24,12 +24,13 @@ import org.apache.shardingsphere.api.sharding.ShardingValue;
 
 /**
  * Sharding value for precise.
+ * 精确策略下对应的值
  */
 @RequiredArgsConstructor
 @Getter
 @ToString
 public final class PreciseShardingValue<T extends Comparable<?>> implements ShardingValue {
-    
+
     private final String logicTableName;
     
     private final String columnName;

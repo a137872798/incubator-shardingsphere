@@ -21,6 +21,7 @@ import org.apache.shardingsphere.sql.parser.sql.ASTNode;
 
 /**
  * SQL segment.
+ * sql 被解析后的某一段
  */
 public interface SQLSegment extends ASTNode {
     
@@ -28,6 +29,7 @@ public interface SQLSegment extends ASTNode {
      * Get start index.
      *
      * @return start index
+     * 该段的起始位置
      */
     int getStartIndex();
     
@@ -35,6 +37,7 @@ public interface SQLSegment extends ASTNode {
      * Get stop index.
      *
      * @return stop index
+     * 该段的终止位置
      */
     int getStopIndex();
 }

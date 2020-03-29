@@ -26,6 +26,7 @@ import java.util.List;
 
 /**
  * SQL unit.
+ * 代表执行一个sql 的最小单位  也就是sql语句 + 使用的参数
  */
 @RequiredArgsConstructor
 @Getter

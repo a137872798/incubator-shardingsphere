@@ -28,6 +28,7 @@ import java.math.BigInteger;
 
 /**
  * SQL utility class.
+ * 工具类
  */
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public final class SQLUtil {
@@ -67,6 +68,7 @@ public final class SQLUtil {
      * @return exactly SQL expression
      */
     public static String getExactlyValue(final String value) {
+        // 应该是从文本中 找到被 指定符号包裹的部分
         return null == value ? null : CharMatcher.anyOf("[]`'\"").removeFrom(value);
     }
     

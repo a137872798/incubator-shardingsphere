@@ -24,6 +24,7 @@ import java.util.Collection;
 
 /**
  * Table available.
+ * 代表该接口允许设置/获取 表信息
  */
 public interface TableAvailable {
     

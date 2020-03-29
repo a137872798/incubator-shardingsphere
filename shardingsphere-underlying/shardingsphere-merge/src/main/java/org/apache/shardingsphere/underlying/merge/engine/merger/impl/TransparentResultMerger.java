@@ -30,7 +30,14 @@ import java.util.List;
  * Transparent result merger.
  */
 public final class TransparentResultMerger implements ResultMerger {
-    
+
+    /**
+     * 这里只返回了第一个结果???
+     * @param queryResults query results
+     * @param sqlStatementContext SQL statement context
+     * @param relationMetas relation metas
+     * @return
+     */
     @Override
     public MergedResult merge(final List<QueryResult> queryResults, final SQLStatementContext sqlStatementContext, final RelationMetas relationMetas) {
         return new TransparentMergedResult(queryResults.get(0));

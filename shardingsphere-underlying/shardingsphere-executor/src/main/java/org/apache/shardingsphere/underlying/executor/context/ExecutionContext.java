@@ -26,12 +26,19 @@ import java.util.LinkedHashSet;
 
 /**
  * Execution context.
+ * 执行sql时的上下文信息
  */
 @RequiredArgsConstructor
 @Getter
 public class ExecutionContext {
-    
+
+    /**
+     * 对应会话期的上下文对象
+     */
     private final SQLStatementContext sqlStatementContext;
-    
+
+    /**
+     * 包含 dataSource sql args   数据源 sql语句 以及使用的参数
+     */
     private final Collection<ExecutionUnit> executionUnits = new LinkedHashSet<>();
 }

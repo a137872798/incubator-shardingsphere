@@ -31,6 +31,7 @@ import org.apache.shardingsphere.sharding.rewrite.token.pojo.impl.OrderByToken;
 
 /**
  * Order by token generator.
+ * 抽取出order by 信息 并转换成token
  */
 public final class OrderByTokenGenerator implements OptionalSQLTokenGenerator<SelectStatementContext>, IgnoreForSingleRoute {
     
@@ -59,6 +60,11 @@ public final class OrderByTokenGenerator implements OptionalSQLTokenGenerator<Se
         return result;
     }
 
+    /**
+     * 定位order by 起始偏移量
+     * @param selectStatementContext
+     * @return
+     */
     private int generateOrderByIndex(final SelectStatementContext selectStatementContext) {
         if (selectStatementContext.getGroupByContext().getLastIndex() > 0) {
             return selectStatementContext.getGroupByContext().getLastIndex() + 1;

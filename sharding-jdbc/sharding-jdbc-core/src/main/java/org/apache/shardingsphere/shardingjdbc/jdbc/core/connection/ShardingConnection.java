@@ -35,18 +35,34 @@ import java.util.Map;
 
 /**
  * Connection that support sharding.
+ * 包装后的连接对象  shardingSphere 相当于将所有dataSource 做了一层代理 对外展示就像是一个DataSource 一样 然后在这里
  */
 @Getter
 public final class ShardingConnection extends AbstractConnectionAdapter {
-    
+
+    /**
+     * 本次涉及到的所有数据源
+     */
     private final Map<String, DataSource> dataSourceMap;
-    
+
     private final ShardingRuntimeContext runtimeContext;
-    
+
+    /**
+     * 本次事务类型
+     */
     private final TransactionType transactionType;
-    
+
+    /**
+     * 当使用本地事务时 该值为null
+     */
     private final ShardingTransactionManager shardingTransactionManager;
-    
+
+    /**
+     *
+     * @param dataSourceMap 本次分表涉及到的所有数据源
+     * @param runtimeContext  该对象具备了实现分表需要的一切信息
+     * @param transactionType  事务类型
+     */
     public ShardingConnection(final Map<String, DataSource> dataSourceMap, final ShardingRuntimeContext runtimeContext, final TransactionType transactionType) {
         this.dataSourceMap = dataSourceMap;
         this.runtimeContext = runtimeContext;
@@ -58,25 +74,41 @@ public final class ShardingConnection extends AbstractConnectionAdapter {
      * Whether hold transaction or not.
      *
      * @return true or false
+     * 分布式事务 代表不会自动提交 而针对本地事务要看当前是否开启了自动提交
      */
     public boolean isHoldTransaction() {
         return (TransactionType.LOCAL == transactionType && !getAutoCommit()) || (TransactionType.XA == transactionType && isInShardingTransaction());
     }
-    
+
+    /**
+     * 获取某个数据源的连接
+     * @param dataSourceName
+     * @param dataSource
+     * @return
+     * @throws SQLException
+     */
     @Override
     protected Connection createConnection(final String dataSourceName, final DataSource dataSource) throws SQLException {
+        // 如果此时已经处在一个事务中了 那么通过事务管理器来获取连接  否则最直接创建连接
         return isInShardingTransaction() ? shardingTransactionManager.getConnection(dataSourceName) : dataSource.getConnection();
     }
     
     private boolean isInShardingTransaction() {
         return null != shardingTransactionManager && shardingTransactionManager.isInTransaction();
     }
-    
+
     @Override
     public DatabaseMetaData getMetaData() throws SQLException {
+        // 此时已经缓存了所有数据源的连接   使用的前提应该是这些数据源的信息都是一致的  所以只要获取一个元数据就可以
         return getCachedConnections().isEmpty() ? runtimeContext.getCachedDatabaseMetaData() : getCachedConnections().values().iterator().next().getMetaData();
     }
-    
+
+    /**
+     * 根据sql语句生成会话对象  该对象需要传入参数才能执行
+     * @param sql
+     * @return
+     * @throws SQLException
+     */
     @Override
     public PreparedStatement prepareStatement(final String sql) throws SQLException {
         return new ShardingPreparedStatement(this, sql);
@@ -106,7 +138,9 @@ public final class ShardingConnection extends AbstractConnectionAdapter {
     public PreparedStatement prepareStatement(final String sql, final String[] columnNames) throws SQLException {
         return new ShardingPreparedStatement(this, sql, Statement.RETURN_GENERATED_KEYS);
     }
-    
+
+    // 下面都是创建普通的会话对象
+
     @Override
     public Statement createStatement() {
         return new ShardingStatement(this);
@@ -140,7 +174,11 @@ public final class ShardingConnection extends AbstractConnectionAdapter {
             shardingTransactionManager.begin();
         }
     }
-    
+
+    /**
+     * 强制关闭当前所有连接
+     * @throws SQLException
+     */
     private void closeCachedConnections() throws SQLException {
         getForceExecuteTemplate().execute(getCachedConnections().values(), Connection::close);
         getCachedConnections().clear();

@@ -28,8 +28,14 @@ import java.util.Collection;
 @RequiredArgsConstructor
 @Getter
 public final class ProxyUser {
-    
+
+    /**
+     * 对应的密码
+     */
     private final String password;
-    
+
+    /**
+     * 校验使用的协议
+     */
     private final Collection<String> authorizedSchemas;
 }

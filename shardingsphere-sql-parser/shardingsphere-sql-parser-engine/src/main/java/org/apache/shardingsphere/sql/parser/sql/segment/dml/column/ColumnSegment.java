@@ -31,6 +31,7 @@ import java.util.Optional;
 
 /**
  * Column segment.
+ * 描述列的 段信息 一个sql语句被AST 解析成多个段
  */
 @RequiredArgsConstructor
 @Getter
@@ -43,7 +44,10 @@ public final class ColumnSegment implements SQLSegment, PredicateRightValue, Own
     private final int stopIndex;
     
     private final IdentifierValue identifier;
-    
+
+    /**
+     * 该列属于哪个表
+     */
     private OwnerSegment owner;
     
     /**

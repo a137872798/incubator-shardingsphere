@@ -27,7 +27,10 @@ import java.util.Optional;
  * Sharding execution context.
  */
 public final class ShardingExecutionContext extends ExecutionContext {
-    
+
+    /**
+     * 传入自动生成的主键 可以为null
+     */
     private final GeneratedKey generatedKey;
     
     public ShardingExecutionContext(final SQLStatementContext sqlStatementContext, final GeneratedKey generatedKey) {

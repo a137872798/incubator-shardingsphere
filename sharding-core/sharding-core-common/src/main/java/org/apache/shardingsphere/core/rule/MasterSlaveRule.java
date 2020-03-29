@@ -28,29 +28,54 @@ import java.util.List;
 
 /**
  * Databases and tables master-slave rule.
+ * 主从规则
  */
 @Getter
 public class MasterSlaveRule implements BaseRule {
     
     private final String name;
-    
+
+    /**
+     * 主数据源
+     */
     private final String masterDataSourceName;
-    
+
+    /**
+     * 一组从数据源
+     */
     private final List<String> slaveDataSourceNames;
-    
+
+    /**
+     * 主从间均衡负载的策略对象
+     */
     private final MasterSlaveLoadBalanceAlgorithm loadBalanceAlgorithm;
-    
+
+    /**
+     * 主从机规则对象
+     */
     private final MasterSlaveRuleConfiguration ruleConfiguration;
-    
+
+    /**
+     * 使用指定的数据来初始化
+     * @param name
+     * @param masterDataSourceName
+     * @param slaveDataSourceNames
+     * @param loadBalanceAlgorithm
+     */
     public MasterSlaveRule(final String name, final String masterDataSourceName, final List<String> slaveDataSourceNames, final MasterSlaveLoadBalanceAlgorithm loadBalanceAlgorithm) {
         this.name = name;
         this.masterDataSourceName = masterDataSourceName;
         this.slaveDataSourceNames = slaveDataSourceNames;
+        // 如果没有指定均衡负载算法 那么使用一个默认的算法 否则使用指定的算法
         this.loadBalanceAlgorithm = null == loadBalanceAlgorithm ? new MasterSlaveLoadBalanceAlgorithmServiceLoader().newService() : loadBalanceAlgorithm;
         ruleConfiguration = new MasterSlaveRuleConfiguration(name, masterDataSourceName, slaveDataSourceNames, 
                 new LoadBalanceStrategyConfiguration(this.loadBalanceAlgorithm.getType(), this.loadBalanceAlgorithm.getProperties()));
     }
-    
+
+    /**
+     * 从配置文件中 获取相关属性进行初始化
+     * @param config
+     */
     public MasterSlaveRule(final MasterSlaveRuleConfiguration config) {
         name = config.getName();
         masterDataSourceName = config.getMasterDataSourceName();
@@ -58,7 +83,12 @@ public class MasterSlaveRule implements BaseRule {
         loadBalanceAlgorithm = createMasterSlaveLoadBalanceAlgorithm(config.getLoadBalanceStrategyConfiguration());
         ruleConfiguration = config;
     }
-    
+
+    /**
+     * 根据类型创建均衡负载实现类
+     * @param loadBalanceStrategyConfiguration
+     * @return
+     */
     private MasterSlaveLoadBalanceAlgorithm createMasterSlaveLoadBalanceAlgorithm(final LoadBalanceStrategyConfiguration loadBalanceStrategyConfiguration) {
         MasterSlaveLoadBalanceAlgorithmServiceLoader serviceLoader = new MasterSlaveLoadBalanceAlgorithmServiceLoader();
         return null == loadBalanceStrategyConfiguration

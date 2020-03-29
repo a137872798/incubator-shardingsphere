@@ -30,6 +30,7 @@ import java.util.Properties;
 
 /**
  * Sharding data source factory.
+ * 该对象用于 包装DataSource 添加隐形代理的能力
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class ShardingDataSourceFactory {
@@ -37,14 +38,15 @@ public final class ShardingDataSourceFactory {
     /**
      * Create sharding data source.
      *
-     * @param dataSourceMap data source map
-     * @param shardingRuleConfig rule configuration for databases and tables sharding
-     * @param props properties for data source
-     * @return sharding data source
+     * @param dataSourceMap data source map   这里是一组备选的数据源对象   从配置文件中读取
+     * @param shardingRuleConfig rule configuration for databases and tables sharding  有关本次分表的规则配置
+     * @param props properties for data source  数据源相关的配置
+     * @return sharding data source  返回包装后的数据源
      * @throws SQLException SQL exception
      */
     public static DataSource createDataSource(
             final Map<String, DataSource> dataSourceMap, final ShardingRuleConfiguration shardingRuleConfig, final Properties props) throws SQLException {
+        // shardingRule 将所有配置抽取出来做了校验的同时 封装成便于使用的对象
         return new ShardingDataSource(dataSourceMap, new ShardingRule(shardingRuleConfig, dataSourceMap.keySet()), props);
     }
 }

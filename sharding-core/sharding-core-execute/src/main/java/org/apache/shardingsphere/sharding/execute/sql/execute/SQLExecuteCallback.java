@@ -40,6 +40,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * Statement execute callback interface.
  *
  * @param <T> class type of return value
+ *           该对象配和线程池执行 会话对象  线程池确保了并行能力 而该对象包含了执行statement 的逻辑
  */
 @RequiredArgsConstructor
 public abstract class SQLExecuteCallback<T> implements GroupedCallback<StatementExecuteUnit, T> {
@@ -49,12 +50,21 @@ public abstract class SQLExecuteCallback<T> implements GroupedCallback<Statement
     private final DatabaseType databaseType;
     
     private final boolean isExceptionThrown;
-    
+
+    /**
+     * 执行会话
+     * @param statementExecuteUnits  一组会话单元
+     * @param isTrunkThread is execution in trunk thread
+     * @param dataMap data map  存放额外的参数
+     * @return
+     * @throws SQLException
+     */
     @Override
     public final Collection<T> execute(final Collection<StatementExecuteUnit> statementExecuteUnits, 
                                        final boolean isTrunkThread, final Map<String, Object> dataMap) throws SQLException {
         Collection<T> result = new LinkedList<>();
         for (StatementExecuteUnit each : statementExecuteUnits) {
+            // 执行后将结果保存到result 中
             result.add(execute0(each, isTrunkThread, dataMap));
         }
         return result;
@@ -71,14 +81,19 @@ public abstract class SQLExecuteCallback<T> implements GroupedCallback<Statement
      * @param dataMap data map
      * @return result
      * @throws SQLException SQL exception
+     * 执行会话单元并生成结果
      */
     private T execute0(final StatementExecuteUnit statementExecuteUnit, final boolean isTrunkThread, final Map<String, Object> dataMap) throws SQLException {
+        // 设置当遇到异常时 是否要抛出
         ExecutorExceptionHandler.setExceptionThrown(isExceptionThrown);
+        // 获取数据源 metaData
         DataSourceMetaData dataSourceMetaData = getDataSourceMetaData(statementExecuteUnit.getStatement().getConnection().getMetaData());
         SQLExecutionHook sqlExecutionHook = new SPISQLExecutionHook();
         try {
             ExecutionUnit executionUnit = statementExecuteUnit.getExecutionUnit();
+            // 前置处理
             sqlExecutionHook.start(executionUnit.getDataSourceName(), executionUnit.getSqlUnit().getSql(), executionUnit.getSqlUnit().getParameters(), dataSourceMetaData, isTrunkThread, dataMap);
+            // 生成结果
             T result = executeSQL(executionUnit.getSqlUnit().getSql(), statementExecuteUnit.getStatement(), statementExecuteUnit.getConnectionMode());
             sqlExecutionHook.finishSuccess();
             return result;
@@ -88,7 +103,7 @@ public abstract class SQLExecuteCallback<T> implements GroupedCallback<Statement
             return null;
         }
     }
-    
+
     private DataSourceMetaData getDataSourceMetaData(final DatabaseMetaData metaData) throws SQLException {
         String url = metaData.getURL();
         if (CACHED_DATASOURCE_METADATA.containsKey(url)) {

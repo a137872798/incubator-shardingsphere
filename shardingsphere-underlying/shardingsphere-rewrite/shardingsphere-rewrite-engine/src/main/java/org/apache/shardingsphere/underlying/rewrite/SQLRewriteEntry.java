@@ -31,10 +31,12 @@ import java.util.Map.Entry;
 
 /**
  * SQL rewrite entry.
+ * 改写sql的入口
  */
 @RequiredArgsConstructor
 public final class SQLRewriteEntry {
-    
+
+    // 元数据以及属性信息
     private final ShardingSphereMetaData metaData;
     
     private final ShardingSphereProperties properties;
@@ -47,11 +49,14 @@ public final class SQLRewriteEntry {
      * @param sqlStatementContext SQL statement context
      * @param decorators SQL rewrite context decorators
      * @return SQL rewrite context
+     * 生成改写sql的上下文
      */
     public SQLRewriteContext createSQLRewriteContext(final String sql, final List<Object> parameters, 
                                                      final SQLStatementContext sqlStatementContext, final Map<BaseRule, SQLRewriteContextDecorator> decorators) {
         SQLRewriteContext result = new SQLRewriteContext(metaData.getRelationMetas(), sqlStatementContext, sql, parameters);
+        // 增加参数 or 修改参数  并且添加一组token生成器
         decorate(decorators, result);
+        // 生成token
         result.generateSQLTokens();
         return result;
     }

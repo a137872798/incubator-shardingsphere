@@ -25,6 +25,7 @@ import java.util.concurrent.ThreadFactory;
 
 /**
  * ShardingSphere thread factory builder.
+ * 线程工厂 包含特殊的前缀
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class ShardingSphereThreadFactoryBuilder {

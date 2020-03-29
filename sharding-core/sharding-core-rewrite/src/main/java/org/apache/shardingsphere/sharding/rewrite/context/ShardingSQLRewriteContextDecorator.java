@@ -29,19 +29,28 @@ import org.apache.shardingsphere.underlying.rewrite.parameter.rewriter.Parameter
 
 /**
  * SQL rewrite context decorator for sharding.
+ * 改写上下文的 装饰对象
  */
 @RequiredArgsConstructor
 public final class ShardingSQLRewriteContextDecorator implements SQLRewriteContextDecorator<ShardingRule> {
     
     private final ShardingRouteContext shardingRouteContext;
-    
+
+    /**
+     * 这里针对 插入语句自动生成主键  以及分页取消 limit 改写了原有参数
+     * @param shardingRule
+     * @param properties ShardingSphere properties
+     * @param sqlRewriteContext SQL rewrite context to be decorated
+     */
     @Override
     public void decorate(final ShardingRule shardingRule, final ShardingSphereProperties properties, final SQLRewriteContext sqlRewriteContext) {
         for (ParameterRewriter each : new ShardingParameterRewriterBuilder(shardingRule, shardingRouteContext).getParameterRewriters(sqlRewriteContext.getRelationMetas())) {
+            // 当判断参数需要被重写时 进行重写
             if (!sqlRewriteContext.getParameters().isEmpty() && each.isNeedRewrite(sqlRewriteContext.getSqlStatementContext())) {
                 each.rewrite(sqlRewriteContext.getParameterBuilder(), sqlRewriteContext.getSqlStatementContext(), sqlRewriteContext.getParameters());
             }
         }
+        // 这里添加一组token 生成器   逻辑sql 配合本次分表结果会需要这些token 生成器 变成多个物理sql
         sqlRewriteContext.addSQLTokenGenerators(new ShardingTokenGenerateBuilder(shardingRule, shardingRouteContext).getSQLTokenGenerators());
     }
 }

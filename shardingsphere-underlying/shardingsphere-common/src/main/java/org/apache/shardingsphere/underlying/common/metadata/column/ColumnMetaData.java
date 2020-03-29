@@ -24,16 +24,26 @@ import lombok.ToString;
 
 /**
  * Column meta data.
+ * 记录列的元数据信息
  */
 @RequiredArgsConstructor
 @Getter
 @EqualsAndHashCode
 @ToString
 public class ColumnMetaData {
-    
+
+    /**
+     * 列名
+     */
     private final String name;
-    
+
+    /**
+     * 数据类型
+     */
     private final String dataType;
-    
+
+    /**
+     * 该列是否是主键
+     */
     private final boolean primaryKey;
 }

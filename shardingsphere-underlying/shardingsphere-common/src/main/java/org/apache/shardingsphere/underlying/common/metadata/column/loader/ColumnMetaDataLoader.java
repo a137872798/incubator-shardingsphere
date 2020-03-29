@@ -28,6 +28,7 @@ import java.util.LinkedList;
 
 /**
  * Column meta data loader.
+ * 加载列的元数据信息对象
  */
 public final class ColumnMetaDataLoader {
     
@@ -38,17 +39,20 @@ public final class ColumnMetaDataLoader {
     /**
      * Load column meta data list.
      * 
-     * @param connection connection
-     * @param catalog catalog name
-     * @param table table name
+     * @param connection connection   数据源对应的连接对象
+     * @param catalog catalog name  种类名
+     * @param table table name  表名
      * @return column meta data list
      * @throws SQLException SQL exception
      */
     public Collection<ColumnMetaData> load(final Connection connection, final String catalog, final String table) throws SQLException {
         Collection<ColumnMetaData> result = new LinkedList<>();
+        // 找到该表所有的主键信息
         Collection<String> primaryKeys = loadPrimaryKeys(connection, catalog, table);
+        // 读取所有列信息
         try (ResultSet resultSet = connection.getMetaData().getColumns(catalog, null, table, "%")) {
             while (resultSet.next()) {
+                // 读取列名 和 列的类型 生成 ColumnMetaData
                 String columnName = resultSet.getString(COLUMN_NAME);
                 String columnType = resultSet.getString(TYPE_NAME);
                 boolean isPrimaryKey = primaryKeys.contains(columnName);
